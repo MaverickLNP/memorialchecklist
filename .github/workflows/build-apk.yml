@@ -12,11 +12,13 @@ jobs:
       - name: Checkout do repositório
         uses: actions/checkout@v4
 
-      - name: Configurar Node.js e Java 21
+      - name: Configurar Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
-      - uses: actions/setup-java@v4
+          node-version: '22'
+
+      - name: Configurar Java 21
+        uses: actions/setup-java@v5
         with:
           distribution: 'temurin'
           java-version: '21'
@@ -30,12 +32,19 @@ jobs:
           npx cap init "Visitação Memorial" "br.org.memorial.visitacao" --web-dir=www
           npx cap add android
           npx cap sync android
+          cat << 'EOF' >> android/app/build.gradle
+
+          configurations.all {
+              exclude group: "org.jetbrains.kotlin", module: "kotlin-stdlib-jdk7"
+              exclude group: "org.jetbrains.kotlin", module: "kotlin-stdlib-jdk8"
+          }
+          EOF
 
       - name: Compilar APK de Debug
         run: |
           cd android
           chmod +x gradlew
-          ./gradlew assembleDebug
+          ./gradlew assembleDebug --no-daemon
 
       - name: Disponibilizar APK para download
         uses: actions/upload-artifact@v4
