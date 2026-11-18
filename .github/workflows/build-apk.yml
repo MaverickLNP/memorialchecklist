@@ -31,7 +31,7 @@ jobs:
           mkdir -p www
           cp index.html www/index.html
           npm init -y
-          npm install @capacitor/core @capacitor/cli @capacitor/android
+          npm install @capacitor/core @capacitor/cli @capacitor/android @capacitor/assets
           npx cap init "Visitação Memorial" "br.org.memorial.visitacao" --web-dir=www
           node -e '
             const fs = require("fs");
@@ -43,19 +43,23 @@ jobs:
             fs.writeFileSync("capacitor.config.json", JSON.stringify(cfg, null, 2));
           '
           npx cap add android
+          npx capacitor-assets generate --android
           npx cap sync android
           cat << 'EOF' >> android/app/build.gradle
+
           configurations.all {
               exclude group: "org.jetbrains.kotlin", module: "kotlin-stdlib-jdk7"
               exclude group: "org.jetbrains.kotlin", module: "kotlin-stdlib-jdk8"
           }
           EOF
+
       - name: Compilar APK de Debug
         run: |
           cd android
           chmod +x gradlew
           ./gradlew assembleDebug --no-daemon
           cp app/build/outputs/apk/debug/app-debug.apk ../MemorialVisitacao.apk
+
       - name: Publicar APK na aba Releases
         uses: softprops/action-gh-release@v2
         with:
