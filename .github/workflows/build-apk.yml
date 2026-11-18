@@ -12,7 +12,7 @@ jobs:
       - name: Checkout do repositório
         uses: actions/checkout@v4
 
-      - name: Configurar Node.js e Java 17
+      - name: Configurar Node.js e Java 21
         uses: actions/setup-node@v4
         with:
           node-version: '20'
