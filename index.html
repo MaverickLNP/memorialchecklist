@@ -736,16 +736,31 @@
     }
 
     async function syncTeamCountBeforeAuth() {
+      const headerBadge = document.getElementById('headerUserBadge');
+      const syncIndicator = document.getElementById('syncModeIndicator');
+
       if (isFirebaseConfigured && fbDb) {
         try {
           const snap = await get(ref(fbDb, 'memorial/users'));
           const val = snap.val();
           teamUsers = val ? Object.values(val) : [];
+          if (headerBadge) headerBadge.textContent = 'Aguardando login';
+          if (syncIndicator) {
+            syncIndicator.textContent = 'Firebase Online';
+            syncIndicator.className = 'text-[11px] font-semibold text-emerald-400 truncate';
+          }
         } catch (e) {
-          console.error('Erro ao ler contagem de usuários:', e);
+          console.error('Erro ao conectar no Firebase:', e);
+          if (headerBadge) headerBadge.textContent = 'Erro de conexão';
+          if (syncIndicator) {
+            syncIndicator.textContent = 'Verifique as Regras do Firebase';
+            syncIndicator.className = 'text-[11px] font-semibold text-rose-400 truncate';
+          }
         }
       } else {
         loadDemoStorage();
+        if (headerBadge) headerBadge.textContent = 'Aguardando login';
+        if (syncIndicator) syncIndicator.textContent = 'Modo Local';
       }
       updateAuthSlotsUI();
     }
@@ -1722,6 +1737,9 @@
       initEvents();
 
       if (isFirebaseConfigured && fbAuth && fbDb) {
+        document.getElementById('syncModeIndicator').textContent = 'Firebase Online';
+        document.getElementById('syncModeIndicator').className = 'text-[11px] font-semibold text-emerald-400 truncate';
+
         onAuthStateChanged(fbAuth, async (user) => {
           if (user) {
             const snap = await get(ref(fbDb, `memorial/users/${user.uid}`));
@@ -1743,6 +1761,8 @@
         } else {
           document.getElementById('headerUserBadge').textContent = 'Aguardando login';
         }
+      }
+    });
       }
     });
   </script>
