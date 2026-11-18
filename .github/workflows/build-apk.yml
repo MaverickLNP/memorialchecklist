@@ -5,6 +5,9 @@ on:
   push:
     branches: [ main ]
 
+permissions:
+  contents: write
+
 jobs:
   build-apk:
     runs-on: ubuntu-latest
@@ -30,6 +33,15 @@ jobs:
           npm init -y
           npm install @capacitor/core @capacitor/cli @capacitor/android
           npx cap init "Visitação Memorial" "br.org.memorial.visitacao" --web-dir=www
+          node -e '
+            const fs = require("fs");
+            const cfg = JSON.parse(fs.readFileSync("capacitor.config.json", "utf8"));
+            cfg.server = {
+              url: "https://mavericklnp.github.io/memorialchecklist/",
+              cleartext: false
+            };
+            fs.writeFileSync("capacitor.config.json", JSON.stringify(cfg, null, 2));
+          '
           npx cap add android
           npx cap sync android
           cat << 'EOF' >> android/app/build.gradle
@@ -45,9 +57,12 @@ jobs:
           cd android
           chmod +x gradlew
           ./gradlew assembleDebug --no-daemon
+          cp app/build/outputs/apk/debug/app-debug.apk ../MemorialVisitacao.apk
 
-      - name: Disponibilizar APK para download
-        uses: actions/upload-artifact@v4
+      - name: Publicar APK na aba Releases
+        uses: softprops/action-gh-release@v2
         with:
-          name: memorial-visitacao-apk
-          path: android/app/build/outputs/apk/debug/app-debug.apk
+          tag_name: v1.0.${{ github.run_number }}
+          name: Visitação Memorial v1.0.${{ github.run_number }}
+          body: APK atualizado automaticamente a partir do commit ${{ github.sha }}.
+          files: MemorialVisitacao.apk
