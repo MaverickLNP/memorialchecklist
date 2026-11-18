@@ -1,9 +1,37 @@
-- name: Preparar projeto Capacitor
+name: Compilar APK Memorial
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [ main ]
+
+permissions:
+  contents: write
+
+jobs:
+  build-apk:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout do repositório
+        uses: actions/checkout@v4
+
+      - name: Configurar Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Configurar Java 21
+        uses: actions/setup-java@v5
+        with:
+          distribution: 'temurin'
+          java-version: '21'
+
+      - name: Preparar projeto Capacitor
         run: |
           mkdir -p www
           cp index.html www/index.html
           npm init -y
-          npm install @capacitor/core @capacitor/cli @capacitor/android @capacitor/assets
+          npm install @capacitor/core @capacitor/cli @capacitor/android
           npx cap init "Visitação Memorial" "br.org.memorial.visitacao" --web-dir=www
           node -e '
             const fs = require("fs");
@@ -15,12 +43,23 @@
             fs.writeFileSync("capacitor.config.json", JSON.stringify(cfg, null, 2));
           '
           npx cap add android
-          npx capacitor-assets generate --android
           npx cap sync android
           cat << 'EOF' >> android/app/build.gradle
-
           configurations.all {
               exclude group: "org.jetbrains.kotlin", module: "kotlin-stdlib-jdk7"
               exclude group: "org.jetbrains.kotlin", module: "kotlin-stdlib-jdk8"
           }
           EOF
+      - name: Compilar APK de Debug
+        run: |
+          cd android
+          chmod +x gradlew
+          ./gradlew assembleDebug --no-daemon
+          cp app/build/outputs/apk/debug/app-debug.apk ../MemorialVisitacao.apk
+      - name: Publicar APK na aba Releases
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v1.0.${{ github.run_number }}
+          name: Visitação Memorial v1.0.${{ github.run_number }}
+          body: APK atualizado automaticamente a partir do commit ${{ github.sha }}.
+          files: MemorialVisitacao.apk
