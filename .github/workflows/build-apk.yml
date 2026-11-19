@@ -66,24 +66,23 @@ jobs:
             gradle = gradle.replace(/versionCode\s+\d+/, `versionCode ${runNum}`);
             gradle = gradle.replace(/versionName\s+"[^"]+"/, `versionName "1.0.${runNum}"`);
 
-            const signingBlock = `
-          signingConfigs {
-              release {
-                  storeFile file("memorial.keystore")
-                  storePassword System.getenv("KEYSTORE_PASSWORD")
-                  keyAlias System.getenv("KEY_ALIAS")
-                  keyPassword System.getenv("KEY_PASSWORD")
+            gradle += `
+
+          android {
+              signingConfigs {
+                  release {
+                      storeFile file("memorial.keystore")
+                      storePassword System.getenv("KEYSTORE_PASSWORD")
+                      keyAlias System.getenv("KEY_ALIAS")
+                      keyPassword System.getenv("KEY_PASSWORD")
+                  }
+              }
+              buildTypes {
+                  release {
+                      signingConfig signingConfigs.release
+                  }
               }
           }
-          buildTypes {`;
-
-            gradle = gradle.replace(/buildTypes\s*\{/, signingBlock);
-            gradle = gradle.replace(
-              /release\s*\{/,
-              "release {\n            signingConfig signingConfigs.release"
-            );
-
-            gradle += `
 
           configurations.all {
               exclude group: "org.jetbrains.kotlin", module: "kotlin-stdlib-jdk7"
