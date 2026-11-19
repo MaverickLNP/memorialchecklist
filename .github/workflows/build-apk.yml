@@ -1,35 +1,4 @@
-name: Compilar APK Memorial
-
-on:
-  workflow_dispatch:
-  push:
-    branches: [ main ]
-    paths:
-      - 'assets/**'
-      - '.github/workflows/build-apk.yml'
-
-permissions:
-  contents: write
-
-jobs:
-  build-apk:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout do repositório
-        uses: actions/checkout@v6
-
-      - name: Configurar Node.js
-        uses: actions/setup-node@v6
-        with:
-          node-version: '22'
-
-      - name: Configurar Java 21
-        uses: actions/setup-java@v5
-        with:
-          distribution: 'temurin'
-          java-version: '21'
-
-      - name: Preparar projeto Capacitor e Keystore
+- name: Preparar projeto Capacitor e Keystore
         env:
           KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
           KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
@@ -40,7 +9,7 @@ jobs:
           mkdir -p www
           cp index.html www/index.html
           npm init -y
-          npm install @capacitor/core @capacitor/cli @capacitor/android @capacitor/assets
+          npm install @capacitor/core @capacitor/cli @capacitor/android @capacitor/assets @capacitor/app @capacitor/filesystem @capacitor-community/file-opener
           npx cap init "Visitação Memorial" "br.org.memorial.visitacao" --web-dir=www
           node -e '
             const fs = require("fs");
@@ -59,6 +28,19 @@ jobs:
 
           node -e '
             const fs = require("fs");
+
+            // 1. Adiciona permissão para instalar APKs baixados no AndroidManifest.xml
+            const manifestPath = "android/app/src/main/AndroidManifest.xml";
+            let manifest = fs.readFileSync(manifestPath, "utf8");
+            if (!manifest.includes("REQUEST_INSTALL_PACKAGES")) {
+              manifest = manifest.replace(
+                "<uses-permission android:name=\"android.permission.INTERNET\" />",
+                "<uses-permission android:name=\"android.permission.INTERNET\" />\n    <uses-permission android:name=\"android.permission.REQUEST_INSTALL_PACKAGES\" />"
+              );
+              fs.writeFileSync(manifestPath, manifest);
+            }
+
+            // 2. Configura versionCode, versionName e Keystore Release no build.gradle
             const gradlePath = "android/app/build.gradle";
             let gradle = fs.readFileSync(gradlePath, "utf8");
             const runNum = process.env.RUN_NUMBER;
@@ -92,22 +74,3 @@ jobs:
 
             fs.writeFileSync(gradlePath, gradle);
           '
-
-      - name: Compilar APK Assinado (Release)
-        env:
-          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
-          KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
-          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
-        run: |
-          cd android
-          chmod +x gradlew
-          ./gradlew assembleRelease --no-daemon
-          cp app/build/outputs/apk/release/app-release.apk ../MemorialVisitacao.apk
-
-      - name: Publicar APK na aba Releases
-        uses: softprops/action-gh-release@v2
-        with:
-          tag_name: v1.0.${{ github.run_number }}
-          name: Visitação Memorial v1.0.${{ github.run_number }}
-          body: APK Release assinado automaticamente a partir do commit ${{ github.sha }}.
-          files: MemorialVisitacao.apk
