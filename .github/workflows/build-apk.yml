@@ -4,6 +4,9 @@ on:
   workflow_dispatch:
   push:
     branches: [ main ]
+    paths:
+      - 'assets/**'
+      - '.github/workflows/build-apk.yml'
 
 permissions:
   contents: write
@@ -66,8 +69,4 @@ jobs:
           tag_name: v1.0.${{ github.run_number }}
           name: Visitação Memorial v1.0.${{ github.run_number }}
           body: APK atualizado automaticamente a partir do commit ${{ github.sha }}.
-<<<<<<< HEAD
           files: MemorialVisitacao.apk
-=======
-          files: MemorialVisitacao.apk
->>>>>>> 11b42ef (Atualiza index.html e configurações)
