@@ -96,6 +96,7 @@
             <span id="syncModeIndicator" class="inline-flex items-center gap-1.5 text-[11px] text-slate-400 truncate">
               <span id="syncStatusDot" class="hidden w-2 h-2 rounded-full bg-emerald-400 animate-pulse shrink-0"></span>
               <span id="syncModeText">Modo Local</span>
+            </span>
           </div>
         </div>
       </div>
@@ -109,7 +110,7 @@
             Carregando data...
           </div>
         </div>
-       
+
         <button id="btnLogout" type="button" title="Sair da conta"
           class="hidden p-2.5 rounded-xl bg-slate-800 hover:bg-rose-500/20 active:scale-95 text-slate-300 hover:text-rose-300 border border-slate-700/80 transition shrink-0">
           <svg class="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
@@ -141,7 +142,7 @@
         <svg class="w-4 h-4 shrink-0 text-amber-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
         </svg>
-        <span>Painel Admin (<span id="teamCountBadge">0/5</span>)</span>
+        <span>Painel Admin (<span id="teamCountBadge">0/11</span>)</span>
       </button>
     </div>
   </header>
@@ -152,7 +153,7 @@
       <div class="text-center space-y-1.5">
         <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-500/10 border border-amber-500/25 text-amber-300 text-xs font-semibold">
           <span class="w-2 h-2 rounded-full bg-amber-400"></span>
-          <span id="authSlotsLabel">0 de 5 contas criadas</span>
+          <span id="authSlotsLabel">0 de 11 contas criadas</span>
         </div>
         <h2 class="text-lg sm:text-xl font-extrabold text-white pt-1">
           Acesso ao Memorial
@@ -169,7 +170,7 @@
         </button>
         <button id="btnShowRegisterTab" type="button"
           class="py-2 rounded-lg text-xs sm:text-sm font-semibold text-slate-400 hover:text-white transition">
-          Criar Conta (<span id="remainingSlotsTabBadge">5</span>)
+          Criar Conta (<span id="remainingSlotsTabBadge">11</span>)
         </button>
       </div>
 
@@ -242,8 +243,8 @@
       <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4 shadow-md space-y-3.5">
         <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div>
-            <label for="thursdayDateInput" class="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-1">
-              Início Regular da Semana (Quinta-feira)
+            <label id="weekStartLabel" for="thursdayDateInput" class="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-1">
+              Início da Semana (Quinta-feira)
             </label>
             <div class="flex items-center gap-2.5 flex-wrap">
               <input type="date" id="thursdayDateInput"
@@ -286,7 +287,7 @@
           </summary>
           <div class="mt-3 p-3 rounded-xl bg-slate-950/80 border border-slate-800 space-y-2">
             <p class="text-[11px] text-slate-400">
-              Ative dias extraordinários desta semana. Ao arquivar a semana, ficam salvos no histórico; ao avançar para a próxima semana, voltam desativados.
+              Ative apenas os dias extraordinários desta semana. Se desativados, a semana retorna automaticamente para Quinta-feira.
             </p>
             <div class="grid grid-cols-3 gap-2 pt-1">
               <label class="flex items-center gap-2 p-2 rounded-lg bg-slate-900 border border-slate-800 cursor-pointer text-xs font-semibold text-slate-200 hover:border-amber-500/40 transition">
@@ -447,7 +448,7 @@
           <p class="text-xs text-slate-400">Promova novos Admins, defina permissões de edição, resete senhas ou libere vagas</p>
         </div>
         <span id="adminSlotsCounter" class="text-xs font-extrabold px-3 py-1.5 rounded-xl bg-amber-500/15 text-amber-300 border border-amber-500/30 shrink-0">
-          0 / 5
+          0 / 11
         </span>
       </div>
 
@@ -522,33 +523,56 @@
     </div>
   </div>
 
-  <!-- Modal Dica de Instalação -->
-  <div id="installTipModal" class="hidden fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4">
-    <div class="bg-slate-900 border border-slate-700 rounded-2xl max-w-md w-full p-5 shadow-2xl space-y-4">
-      <div class="flex items-center justify-between">
-        <h3 class="text-base font-bold text-white flex items-center gap-2">
-          <svg class="w-5 h-5 text-sky-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z" />
+  <!-- Modal de Atualização In-App do APK -->
+  <div id="apkUpdateModal" class="hidden fixed inset-0 z-50 bg-slate-950/85 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="bg-slate-900 border border-amber-500/40 rounded-2xl max-w-md w-full p-5 shadow-2xl space-y-4">
+      <div class="flex items-start gap-3">
+        <div class="w-11 h-11 rounded-xl bg-amber-500/15 border border-amber-500/35 flex items-center justify-center shrink-0 text-amber-400">
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
           </svg>
-          Sincronização &amp; Uso no Celular
-        </h3>
-        <button id="btnCloseInstallModal" type="button" class="text-slate-400 hover:text-white p-1">
-          ✕
+        </div>
+        <div class="flex-1 min-w-0">
+          <div class="flex items-center justify-between gap-2">
+            <h3 class="text-base font-bold text-white">Nova Versão Disponível</h3>
+            <span id="apkNewVersionBadge" class="text-xs font-extrabold px-2.5 py-0.5 rounded-full bg-amber-500 text-slate-950">
+              v1.0.0
+            </span>
+          </div>
+          <p id="apkCurrentVersionText" class="text-xs text-slate-400 mt-1">
+            Versão instalada: —
+          </p>
+        </div>
+      </div>
+
+      <div id="apkReleaseNotes" class="bg-slate-950/80 border border-slate-800 rounded-xl p-3 text-xs text-slate-300 max-h-28 overflow-y-auto whitespace-pre-line">
+        Melhorias e correções no aplicativo do Memorial.
+      </div>
+
+      <!-- Barra de progresso interna (oculta até clicar em Download) -->
+      <div id="apkDownloadProgressBox" class="hidden space-y-1.5">
+        <div class="flex items-center justify-between text-xs">
+          <span id="apkDownloadStatusText" class="text-amber-300 font-semibold">Baixando atualização...</span>
+          <span id="apkDownloadPercentText" class="font-mono font-bold text-white">0%</span>
+        </div>
+        <div class="w-full h-2.5 bg-slate-800 rounded-full overflow-hidden">
+          <div id="apkDownloadProgressBar" class="h-full bg-gradient-to-r from-amber-500 to-emerald-400 transition-all duration-150" style="width: 0%;"></div>
+        </div>
+      </div>
+
+      <div id="apkUpdateActions" class="flex flex-col sm:flex-row gap-2 pt-1">
+        <button id="btnStartApkDownload" type="button"
+          class="flex-1 py-3 px-4 rounded-xl bg-amber-500 hover:bg-amber-400 active:scale-[0.98] text-slate-950 font-bold text-sm transition flex items-center justify-center gap-2 shadow-lg">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.4" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+          </svg>
+          <span>Download e Instalar</span>
+        </button>
+        <button id="btnCloseApkUpdate" type="button"
+          class="py-3 px-4 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 font-semibold text-xs sm:text-sm border border-slate-700 transition">
+          Depois
         </button>
       </div>
-
-      <div class="text-xs sm:text-sm text-slate-300 space-y-3 leading-relaxed">
-        <p>Este aplicativo suporta <strong>até 5 contas sincronizadas em tempo real</strong> (1 Admin + 4 Users) entre os celulares autorizados do Memorial.</p>
-        <ol class="list-decimal pl-5 space-y-1.5 text-slate-300">
-          <li>Banco de dados em nuvem ativo via <strong>Firebase Realtime Database</strong>.</li>
-          <li>No Chrome/Brave do celular, toque nos três pontinhos e escolha <strong>Adicionar à tela inicial</strong> para abrir em tela cheia.</li>
-        </ol>
-      </div>
-
-      <button id="btnOkInstallModal" type="button"
-        class="w-full py-3 rounded-xl bg-sky-600 hover:bg-sky-500 text-white font-semibold text-sm transition">
-        Entendi
-      </button>
     </div>
   </div>
 
@@ -592,7 +616,7 @@
       onValue
     } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-database.js";
 
-    const MAX_TEAM_ACCOUNTS = 12;
+    const MAX_TEAM_ACCOUNTS = 11;
     const DAY_NAMES = ['Quinta-feira', 'Sexta-feira', 'Sábado', 'Domingo'];
     const SPORADIC_META = [
       { key: 'mon', label: 'Segunda-feira', offset: -3 },
@@ -672,13 +696,16 @@
       return copy;
     }
 
-    // Calcula a quinta-feira da semana operacional corrente (segunda a domingo)
+    function getThursdayOfWeek(dateObj) {
+      const dayOfWeek = dateObj.getDay(); // 0=Dom, 1=Seg, 2=Ter, 3=Qua, 4=Qui, 5=Sex, 6=Sab
+      const diffToThursday = dayOfWeek === 0 ? -3 : (4 - dayOfWeek);
+      return addDays(dateObj, diffToThursday);
+    }
+
     function getTrueCurrentThursdayISO() {
       const now = new Date();
       const localToday = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 12, 0, 0);
-      const dayOfWeek = localToday.getDay(); // 0=Dom, 1=Seg, 2=Ter, 3=Qua, 4=Qui, 5=Sex, 6=Sab
-      const diffToThursday = dayOfWeek === 0 ? -3 : (4 - dayOfWeek);
-      return formatISO(addDays(localToday, diffToThursday));
+      return formatISO(getThursdayOfWeek(localToday));
     }
 
     function createDefaultSporadicDays() {
@@ -731,7 +758,6 @@
       return [0, 1, 2, 3].map(offset => addDays(base, offset));
     }
 
-    // Retorna os dias ativos da semana em ordem cronológica (Seg..Qua esporádicos ativos + Qui..Dom regulares)
     function getOrderedWeekEntries() {
       const baseThu = parseLocalDate(currentState.thursdayDate || getTrueCurrentThursdayISO());
       const sporadic = currentState.sporadicDays || {};
@@ -911,7 +937,7 @@
 
     function showRegisterSubTab() {
       if (teamUsers.length >= MAX_TEAM_ACCOUNTS) {
-        showToast('Limite máximo de 5 contas já atingido.');
+        showToast(`Limite máximo de ${MAX_TEAM_ACCOUNTS} contas já atingido.`);
         return;
       }
       document.getElementById('registerForm').classList.remove('hidden');
@@ -931,7 +957,29 @@
 
       const roleTag = profile.role === 'admin' ? 'Admin' : 'User';
       document.getElementById('headerUserBadge').textContent = `${profile.name} (${roleTag})`;
-      document.getElementById('syncModeIndicator').textContent = isFirebaseConfigured ? 'Firebase Online' : 'Modo Local';
+
+      const syncModeText = document.getElementById('syncModeText');
+      const syncStatusDot = document.getElementById('syncStatusDot');
+
+      if (isFirebaseConfigured && fbDb) {
+        syncModeText.textContent = 'Firebase Online';
+        syncStatusDot.classList.remove('hidden');
+
+        onValue(ref(fbDb, '.info/connected'), (snap) => {
+          if (snap.val() === true) {
+            syncModeText.textContent = 'Firebase Online';
+            syncModeText.className = 'text-emerald-300 font-medium';
+            syncStatusDot.className = 'w-2 h-2 rounded-full bg-emerald-400 animate-pulse shrink-0';
+          } else {
+            syncModeText.textContent = 'Reconectando...';
+            syncModeText.className = 'text-amber-300 font-medium';
+            syncStatusDot.className = 'w-2 h-2 rounded-full bg-amber-400 animate-pulse shrink-0';
+          }
+        });
+      } else {
+        syncModeText.textContent = 'Modo Local';
+        syncStatusDot.classList.add('hidden');
+      }
 
       const tabTeam = document.getElementById('tabTeam');
       if (profile.role === 'admin') {
@@ -1029,6 +1077,9 @@
       document.getElementById('authView').classList.remove('hidden');
       document.getElementById('loginCredential').value = '';
       document.getElementById('headerUserBadge').textContent = 'Desconectado';
+      document.getElementById('syncStatusDot').classList.add('hidden');
+      document.getElementById('syncModeText').textContent = 'Modo Local';
+      document.getElementById('syncModeText').className = 'text-slate-400';
       await syncTeamCountBeforeAuth();
     }
 
@@ -1248,7 +1299,14 @@
       const entries = getOrderedWeekEntries();
       const period = getActivePeriodString();
 
-      document.getElementById('thursdayDateInput').value = currentState.thursdayDate;
+      const activeStartEntry = entries[0];
+      const startLabelEl = document.getElementById('weekStartLabel');
+      if (startLabelEl && activeStartEntry) {
+        startLabelEl.textContent = `Início da Semana (${activeStartEntry.dayName})`;
+      }
+      document.getElementById('thursdayDateInput').value = activeStartEntry
+        ? formatISO(activeStartEntry.dateObj)
+        : currentState.thursdayDate;
       document.getElementById('periodLabel').textContent = period;
 
       const totalDaysCount = entries.length;
@@ -1304,7 +1362,6 @@
         auditEl.textContent = 'Nenhuma alteração registrada nesta semana';
       }
 
-      // Exibe botão de Relatório Mensal caso o domingo da semana seja o último domingo do mês
       const lastSundayBox = document.getElementById('lastSundayMonthlyBox');
       if (lastSundayBox) {
         if (isLastSundayOfMonth(weekDates[3])) {
@@ -1591,7 +1648,140 @@
       };
     }
 
+    // ================= ATUALIZADOR IN-APP DO APK =================
+    const GITHUB_RELEASES_LATEST_URL = 'https://api.github.com/repos/MaverickLNP/memorialchecklist/releases/latest';
+    let latestApkAssetUrl = null;
+    let latestApkTagName = null;
+
+    function compareSemver(remoteVer, localVer) {
+      const r = String(remoteVer).replace(/^v/i, '').split('.').map(n => parseInt(n, 10) || 0);
+      const l = String(localVer).replace(/^v/i, '').split('.').map(n => parseInt(n, 10) || 0);
+      const len = Math.max(r.length, l.length);
+      for (let i = 0; i < len; i++) {
+        if ((r[i] || 0) > (l[i] || 0)) return 1;
+        if ((r[i] || 0) < (l[i] || 0)) return -1;
+      }
+      return 0;
+    }
+
+    async function checkForApkUpdate() {
+      const cap = window.Capacitor;
+      if (!cap || !cap.isNativePlatform || !cap.isNativePlatform()) return;
+
+      try {
+        const appInfo = await cap.Plugins.App.getInfo();
+        const installedVersion = appInfo.version;
+
+        const res = await fetch(GITHUB_RELEASES_LATEST_URL, {
+          headers: { 'Accept': 'application/vnd.github+json' }
+        });
+        if (!res.ok) return;
+
+        const release = await res.json();
+        const remoteTag = (release.tag_name || '').replace(/^v/i, '');
+        const apkAsset = (release.assets || []).find(a => a.name && a.name.endsWith('.apk'));
+
+        if (!apkAsset || compareSemver(remoteTag, installedVersion) <= 0) return;
+
+        latestApkAssetUrl = apkAsset.browser_download_url;
+        latestApkTagName = `v${remoteTag}`;
+
+        document.getElementById('apkNewVersionBadge').textContent = latestApkTagName;
+        document.getElementById('apkCurrentVersionText').textContent = `Versão instalada: v${installedVersion}`;
+        if (release.body) {
+          document.getElementById('apkReleaseNotes').textContent = release.body;
+        }
+        document.getElementById('apkUpdateModal').classList.remove('hidden');
+      } catch (err) {
+        console.warn('Falha ao verificar atualização do APK:', err);
+      }
+    }
+
+    async function downloadAndInstallApkInApp() {
+      if (!latestApkAssetUrl) return;
+      const cap = window.Capacitor;
+
+      const btnDownload = document.getElementById('btnStartApkDownload');
+      const btnClose = document.getElementById('btnCloseApkUpdate');
+      const progressBox = document.getElementById('apkDownloadProgressBox');
+      const progressBar = document.getElementById('apkDownloadProgressBar');
+      const percentText = document.getElementById('apkDownloadPercentText');
+      const statusText = document.getElementById('apkDownloadStatusText');
+
+      btnDownload.disabled = true;
+      btnDownload.classList.add('opacity-50', 'pointer-events-none');
+      btnClose.classList.add('hidden');
+      progressBox.classList.remove('hidden');
+
+      try {
+        const response = await fetch(latestApkAssetUrl);
+        if (!response.ok) throw new Error('Erro HTTP ao baixar APK');
+
+        const contentLength = Number(response.headers.get('content-length')) || 0;
+        const reader = response.body.getReader();
+        const chunks = [];
+        let receivedLength = 0;
+
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+          chunks.push(value);
+          receivedLength += value.length;
+
+          if (contentLength > 0) {
+            const pct = Math.min(100, Math.round((receivedLength / contentLength) * 100));
+            progressBar.style.width = `${pct}%`;
+            percentText.textContent = `${pct}%`;
+          } else {
+            const mb = (receivedLength / (1024 * 1024)).toFixed(1);
+            percentText.textContent = `${mb} MB`;
+          }
+        }
+
+        statusText.textContent = 'Preparando instalador...';
+        progressBar.style.width = '100%';
+        percentText.textContent = '100%';
+
+        const blob = new Blob(chunks, { type: 'application/vnd.android.package-archive' });
+        const base64Data = await new Promise((resolve, reject) => {
+          const fileReader = new FileReader();
+          fileReader.onloadend = () => resolve(fileReader.result.split(',')[1]);
+          fileReader.onerror = reject;
+          fileReader.readAsDataURL(blob);
+        });
+
+        const fileName = `MemorialVisitacao-${latestApkTagName}.apk`;
+        const savedFile = await cap.Plugins.Filesystem.writeFile({
+          path: fileName,
+          data: base64Data,
+          directory: 'CACHE'
+        });
+
+        statusText.textContent = 'Abrindo instalação no Android...';
+
+        await cap.Plugins.FileOpener.open({
+          filePath: savedFile.uri,
+          contentType: 'application/vnd.android.package-archive'
+        });
+
+        document.getElementById('apkUpdateModal').classList.add('hidden');
+      } catch (err) {
+        console.error('Erro no download interno do APK:', err);
+        statusText.textContent = 'Abrindo download pelo navegador...';
+        window.open(latestApkAssetUrl, '_blank');
+      } finally {
+        btnDownload.disabled = false;
+        btnDownload.classList.remove('opacity-50', 'pointer-events-none');
+        btnClose.classList.remove('hidden');
+      }
+    }
+
     function initEvents() {
+      document.getElementById('btnStartApkDownload')?.addEventListener('click', downloadAndInstallApkInApp);
+      document.getElementById('btnCloseApkUpdate')?.addEventListener('click', () => {
+        document.getElementById('apkUpdateModal').classList.add('hidden');
+      });
+
       document.getElementById('btnShowLoginTab').addEventListener('click', showLoginSubTab);
       document.getElementById('btnShowRegisterTab').addEventListener('click', showRegisterSubTab);
 
@@ -1633,7 +1823,7 @@
       document.getElementById('registerForm').addEventListener('submit', async (e) => {
         e.preventDefault();
         if (teamUsers.length >= MAX_TEAM_ACCOUNTS) {
-          showToast('Limite máximo de 5 contas já atingido.');
+          showToast(`Limite máximo de ${MAX_TEAM_ACCOUNTS} contas já atingido.`);
           return;
         }
 
@@ -1802,9 +1992,14 @@
         showToast('Dados do integrante atualizados!');
       });
 
+      // Calcula automaticamente a Quinta-feira da semana operacional (Seg a Dom) de qualquer data escolhida no calendário
       document.getElementById('thursdayDateInput').addEventListener('change', async (e) => {
         if (!e.target.value || !userCanEdit()) return;
-        currentState.thursdayDate = e.target.value;
+        const pickedDate = parseLocalDate(e.target.value);
+        const correspondingThursday = getThursdayOfWeek(pickedDate);
+
+        currentState.thursdayDate = formatISO(correspondingThursday);
+
         await persistCurrentWeek(true);
         renderDays();
         updateSummaryAndPreview();
@@ -1968,7 +2163,6 @@
         }
       }
 
-      // Ao clicar em "Semana Atual", retorna para a verdadeira semana atual caso esteja em outra data
       tabCurrent.addEventListener('click', async () => {
         const trueThu = getTrueCurrentThursdayISO();
         if (currentState.thursdayDate !== trueThu) {
@@ -2018,17 +2212,6 @@
           showToast(`Semana ${item.periodLabel} carregada no editor.`);
         }
       });
-
-      const installTipModal = document.getElementById('installTipModal');
-      document.getElementById('btnInstallTip').addEventListener('click', () => {
-        installTipModal.classList.remove('hidden');
-      });
-      document.getElementById('btnCloseInstallModal').addEventListener('click', () => {
-        installTipModal.classList.add('hidden');
-      });
-      document.getElementById('btnOkInstallModal').addEventListener('click', () => {
-        installTipModal.classList.add('hidden');
-      });
     }
 
     function startLiveClock() {
@@ -2064,6 +2247,7 @@
 
     window.addEventListener('DOMContentLoaded', async () => {
       startLiveClock();
+      checkForApkUpdate();
       initEvents();
 
       if (isFirebaseConfigured && fbAuth && fbDb) {
