@@ -29,7 +29,13 @@ jobs:
           distribution: 'temurin'
           java-version: '21'
 
-      - name: Preparar projeto Capacitor
+      - name: Preparar projeto Capacitor e Keystore
+        env:
+          KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
+          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
+          RUN_NUMBER: ${{ github.run_number }}
         run: |
           mkdir -p www
           cp index.html www/index.html
@@ -48,25 +54,61 @@ jobs:
           npx cap add android
           npx capacitor-assets generate --android
           npx cap sync android
-          cat << 'EOF' >> android/app/build.gradle
+
+          echo "$KEYSTORE_BASE64" | base64 -d > android/app/memorial.keystore
+
+          node -e '
+            const fs = require("fs");
+            const gradlePath = "android/app/build.gradle";
+            let gradle = fs.readFileSync(gradlePath, "utf8");
+            const runNum = process.env.RUN_NUMBER;
+
+            gradle = gradle.replace(/versionCode\s+\d+/, `versionCode ${runNum}`);
+            gradle = gradle.replace(/versionName\s+"[^"]+"/, `versionName "1.0.${runNum}"`);
+
+            const signingBlock = `
+          signingConfigs {
+              release {
+                  storeFile file("memorial.keystore")
+                  storePassword System.getenv("KEYSTORE_PASSWORD")
+                  keyAlias System.getenv("KEY_ALIAS")
+                  keyPassword System.getenv("KEY_PASSWORD")
+              }
+          }
+          buildTypes {`;
+
+            gradle = gradle.replace(/buildTypes\s*\{/, signingBlock);
+            gradle = gradle.replace(
+              /release\s*\{/,
+              "release {\n            signingConfig signingConfigs.release"
+            );
+
+            gradle += `
 
           configurations.all {
               exclude group: "org.jetbrains.kotlin", module: "kotlin-stdlib-jdk7"
               exclude group: "org.jetbrains.kotlin", module: "kotlin-stdlib-jdk8"
           }
-          EOF
+          `;
 
-      - name: Compilar APK de Debug
+            fs.writeFileSync(gradlePath, gradle);
+          '
+
+      - name: Compilar APK Assinado (Release)
+        env:
+          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
         run: |
           cd android
           chmod +x gradlew
-          ./gradlew assembleDebug --no-daemon
-          cp app/build/outputs/apk/debug/app-debug.apk ../MemorialVisitacao.apk
+          ./gradlew assembleRelease --no-daemon
+          cp app/build/outputs/apk/release/app-release.apk ../MemorialVisitacao.apk
 
       - name: Publicar APK na aba Releases
         uses: softprops/action-gh-release@v2
         with:
           tag_name: v1.0.${{ github.run_number }}
           name: Visitação Memorial v1.0.${{ github.run_number }}
-          body: APK atualizado automaticamente a partir do commit ${{ github.sha }}.
+          body: APK Release assinado automaticamente a partir do commit ${{ github.sha }}.
           files: MemorialVisitacao.apk
