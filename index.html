@@ -2781,7 +2781,7 @@
       document.getElementById('adminSlotsCounter').textContent = `${count} / ${MAX_TEAM_ACCOUNTS} vagas`;
 
       container.innerHTML = teamUsers.map((member, index) => {
-        const isFounderMember = Boolean(member.isFounder) || index === 0;
+        const isFounderMember = Boolean(member.isFounder);
         const isAdminMember = isFounderMember || member.role === 'admin';
         const isSelf = currentUserProfile && member.uid === currentUserProfile.uid;
         const canEditFlag = isAdminMember ? true : Boolean(member.canEdit);
@@ -3937,7 +3937,7 @@
         const targetMember = teamUsers[targetIndex];
         if (!targetMember) return;
 
-        const isTargetFounder = Boolean(targetMember.isFounder) || targetIndex === 0;
+        const isTargetFounder = Boolean(targetMember.isFounder);
 
         if (action === 'edit') {
           if (isTargetFounder && targetMember.uid !== currentUserProfile.uid) {
