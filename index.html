@@ -1014,10 +1014,17 @@
             }
           }
           applyPermissionsUI();
-          renderDays();
+
+          const activeEl = document.activeElement;
+          const isTypingInDays = activeEl &&
+            activeEl.closest('#daysContainer') &&
+            (activeEl.tagName === 'INPUT' || activeEl.tagName === 'TEXTAREA');
+
+          if (!isTypingInDays) {
+            renderDays();
+          }
           updateSummaryAndPreview();
         });
-
         onValue(ref(fbDb, 'memorial/history'), (snap) => {
           const val = snap.val();
           historyState = Array.isArray(val) ? val : INITIAL_HISTORY;
@@ -2064,20 +2071,35 @@
         }
       });
 
-      daysContainer.addEventListener('input', async (e) => {
+      let typingSaveTimer = null;
+
+      daysContainer.addEventListener('input', (e) => {
         if (!userCanEdit()) return;
         const target = e.target;
         const dayObj = getTargetDayObject(target);
         if (!dayObj) return;
+
         if (target.dataset.action === 'input-visitors') {
           const val = Math.max(0, parseInt(target.value, 10) || 0);
           dayObj.visitors = val;
-          await persistCurrentWeek(true);
           updateSummaryAndPreview();
         } else if (target.dataset.action === 'input-obs') {
           dayObj.obs = target.value;
-          await persistCurrentWeek(true);
           updateSummaryAndPreview();
+        }
+
+        clearTimeout(typingSaveTimer);
+        typingSaveTimer = setTimeout(() => {
+          persistCurrentWeek(true);
+        }, 600);
+      });
+
+      daysContainer.addEventListener('focusout', () => {
+        if (!userCanEdit()) return;
+        if (typingSaveTimer) {
+          clearTimeout(typingSaveTimer);
+          typingSaveTimer = null;
+          persistCurrentWeek(true);
         }
       });
 
