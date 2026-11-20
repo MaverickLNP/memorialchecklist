@@ -101,7 +101,7 @@
 
   <!-- Cabeçalho Institucional Fixo -->
   <header class="sticky top-0 z-30 bg-slate-900/95 backdrop-blur-md border-b border-slate-800 shadow-lg">
-    <div class="max-w-2xl mx-auto px-4 py-3.5 flex items-center justify-between gap-2.5">
+    <div class="max-w-2xl lg:max-w-7xl mx-auto px-4 lg:px-8 py-3.5 flex items-center justify-between gap-2.5">
       <div class="flex items-center gap-2.5 min-w-0">
         <div class="w-6 h-6 rounded-md bg-[#facc15] border border-amber-300/60 shadow-sm flex items-center justify-center shrink-0 p-1" aria-label="Logo Memorial às Vítimas do Holocausto">
           <svg class="h-3.5 w-auto object-contain" viewBox="0 0 60 120" xmlns="http://www.w3.org/2000/svg">
@@ -145,7 +145,7 @@
       </div>
     </div>
 
-    <div id="mainNavTabs" class="hidden max-w-2xl mx-auto px-4 pb-2.5 flex gap-2">
+    <div id="mainNavTabs" class="hidden max-w-2xl lg:max-w-7xl mx-auto px-4 lg:px-8 pb-2.5 flex gap-2">
       <button id="tabCurrent" type="button"
         class="flex-1 py-2 px-2.5 rounded-xl text-xs sm:text-sm font-semibold transition flex items-center justify-center gap-1.5 bg-amber-500 text-slate-950 shadow-sm">
         <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
@@ -253,7 +253,7 @@
   </section>
 
   <!-- Conteúdo Principal -->
-  <main id="appMainContent" class="hidden max-w-2xl mx-auto px-4 pt-5 space-y-5">
+  <main id="appMainContent" class="hidden max-w-2xl lg:max-w-7xl mx-auto px-4 lg:px-8 pt-5 lg:pt-6 space-y-5 lg:space-y-6">
 
     <!-- Banner de Fila Offline Pendente -->
     <div id="offlinePendingBanner" class="hidden bg-amber-500/15 border border-amber-500/45 rounded-2xl p-3.5 flex items-center justify-between gap-3 text-xs sm:text-sm text-amber-200">
@@ -279,29 +279,44 @@
     </div>
 
     <!-- ABA 1: CHECKLIST DA SEMANA -->
-    <section id="viewCurrent" class="space-y-5">
+    <section id="viewCurrent" class="grid grid-cols-1 lg:grid-cols-12 gap-5 lg:gap-6 items-start">
+      <!-- Coluna Esquerda Desktop (7/12): Seletor + Cards dos Dias -->
+      <div class="lg:col-span-7 space-y-5">
       <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4 shadow-md space-y-3.5">
         <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-          <div>
-            <label id="weekStartLabel" for="thursdayDateInput" class="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-1">
-              Início da Semana (Quinta-feira)
+          <div class="space-y-1">
+            <label id="weekStartLabel" for="yearSelectorInput" class="block text-xs font-semibold uppercase tracking-wider text-slate-400">
+              Ano, Mês e Semana Operacional
             </label>
-            <div class="flex items-center gap-2.5 flex-wrap">
-              <input type="date" id="thursdayDateInput"
-                class="bg-slate-850 border border-slate-700 rounded-xl px-3.5 py-2.5 text-sm font-semibold text-white focus:outline-none focus:border-amber-400 transition disabled:opacity-50" />
-              <span id="periodLabel" class="text-xs sm:text-sm font-medium text-amber-300 bg-amber-500/10 border border-amber-500/25 px-3 py-2 rounded-xl">
+            <div class="flex items-center gap-2 flex-wrap">
+              <select id="yearSelectorInput" aria-label="Selecionar Ano"
+                class="bg-slate-850 border border-slate-700 rounded-xl px-3 py-2 text-xs sm:text-sm font-extrabold text-amber-300 focus:outline-none focus:border-amber-400 transition disabled:opacity-50">
+              </select>
+              <select id="monthSelectorInput" aria-label="Selecionar Mês"
+                class="bg-slate-850 border border-slate-700 rounded-xl px-3 py-2 text-xs sm:text-sm font-bold text-white focus:outline-none focus:border-amber-400 transition disabled:opacity-50">
+              </select>
+              <span id="periodLabel" class="text-xs sm:text-sm font-semibold text-amber-300 bg-amber-500/10 border border-amber-500/25 px-3 py-2 rounded-xl">
                 19/11 a 22/11/2026
               </span>
             </div>
           </div>
 
           <button id="btnNextWeek" type="button"
-            class="w-full sm:w-auto px-4 py-2.5 rounded-xl bg-sky-500/15 hover:bg-sky-500/25 active:scale-95 text-sky-300 border border-sky-500/30 text-xs sm:text-sm font-semibold transition flex items-center justify-center gap-2 disabled:opacity-40 disabled:pointer-events-none">
+            class="w-full sm:w-auto px-3.5 py-2.5 rounded-xl bg-sky-500/15 hover:bg-sky-500/25 active:scale-95 text-sky-300 border border-sky-500/30 text-xs font-semibold transition flex items-center justify-center gap-1.5 disabled:opacity-40 disabled:pointer-events-none shrink-0">
             <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" d="M13 5l7 7-7 7M5 5l7 7-7 7" />
             </svg>
-            Nova Semana (+7 dias)
+            <span>Próxima Semana</span>
           </button>
+        </div>
+
+        <!-- Botões de Seleção Rápida das Semanas do Mês (Semana 1 até o Último Domingo) -->
+        <div class="space-y-1.5">
+          <div class="flex items-center justify-between text-[11px] text-slate-400">
+            <span id="monthWeeksHelperText">Selecione a semana do mês:</span>
+            <span id="lastSundayWeekHint" class="text-amber-300/90 font-medium"></span>
+          </div>
+          <div id="monthWeekButtonsContainer" class="grid grid-cols-2 sm:grid-cols-4 gap-2"></div>
         </div>
 
         <div class="pt-1">
@@ -347,8 +362,12 @@
         </details>
       </div>
 
-      <div id="daysContainer" class="space-y-3.5"></div>
+      <div id="daysContainer" class="space-y-3.5 lg:space-y-0 lg:grid lg:grid-cols-2 lg:gap-4"></div>
 
+      </div>
+
+      <!-- Coluna Direita Desktop (5/12 Sticky): Total Consolidado + WhatsApp Diretoria -->
+      <div class="lg:col-span-5 space-y-5 lg:sticky lg:top-28">
       <div class="bg-gradient-to-br from-slate-900 via-slate-900 to-slate-850 border border-slate-800 rounded-2xl p-4 sm:p-5 shadow-lg space-y-4">
         <div class="flex items-center justify-between gap-4">
           <div>
@@ -464,6 +483,7 @@
           </button>
         </div>
       </div>
+      </div>
     </section>
 
     <!-- ABA 2: DASHBOARD ANUAL & HISTÓRICO DE SEMANAS -->
@@ -482,11 +502,17 @@
           <select id="dashYearSelect"
             class="bg-slate-850 border border-slate-700 rounded-xl px-3 py-1.5 text-xs font-bold text-amber-300 focus:outline-none focus:border-amber-400">
             <option value="2026">2026</option>
+            <option value="2027">2027</option>
+            <option value="2028">2028</option>
+            <option value="2029">2029</option>
+            <option value="2030">2030</option>
           </select>
         </div>
 
+        <!-- Layout Desktop: KPIs + Gráfico lado a lado -->
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-4 items-stretch">
         <!-- KPIs -->
-        <div class="grid grid-cols-3 gap-2.5">
+        <div class="lg:col-span-4 grid grid-cols-3 lg:grid-cols-1 gap-2.5">
           <div class="bg-slate-950/80 border border-slate-800 rounded-xl p-3">
             <span class="block text-[10px] sm:text-[11px] font-semibold uppercase tracking-wider text-slate-400">Total no Ano</span>
             <span id="kpiYearTotal" class="text-lg sm:text-2xl font-extrabold text-white mt-0.5 block">0</span>
@@ -502,10 +528,11 @@
         </div>
 
         <!-- Gráfico de Barras -->
-        <div class="bg-slate-950/60 border border-slate-800/80 rounded-xl p-3">
-          <div class="h-44 sm:h-52 w-full">
+        <div class="lg:col-span-8 bg-slate-950/60 border border-slate-800/80 rounded-xl p-3 flex flex-col justify-center">
+          <div class="h-44 sm:h-52 lg:h-64 w-full">
             <canvas id="visitorsTrendChart"></canvas>
           </div>
+        </div>
         </div>
 
         <!-- Exportação Oficial para Diretoria / Prestação de Contas -->
@@ -547,7 +574,7 @@
         </div>
       </div>
 
-      <div id="historyListContainer" class="space-y-3"></div>
+      <div id="historyListContainer" class="space-y-3 lg:space-y-0 lg:grid lg:grid-cols-2 lg:gap-4 items-start"></div>
     </section>
 
     <!-- ABA 3: PAINEL DO ADMINISTRADOR -->
@@ -580,7 +607,7 @@
         </button>
       </div>
 
-      <div id="teamMembersContainer" class="space-y-3"></div>
+      <div id="teamMembersContainer" class="space-y-3 lg:space-y-0 lg:grid lg:grid-cols-2 lg:gap-4 items-start"></div>
     </section>
   </main>
 
@@ -765,6 +792,9 @@
     const STORAGE_KEY_LAST_EMAIL = 'memorial_visitacao_last_email_v2';
     const STORAGE_KEY_OFFLINE_DIRTY = 'memorial_offline_pending_sync_v1';
     const STORAGE_KEY_SUNDAY_REMINDER = 'memorial_sunday_reminder_enabled_v1';
+    const STORAGE_KEY_CACHED_PROFILE = 'memorial_cached_profile_v1';
+    const STORAGE_KEY_LAST_ACTIVITY = 'memorial_last_activity_v1';
+    const INACTIVITY_LIMIT_MS = 60 * 60 * 1000; // 1 hora sem interação
 
     const isFirebaseConfigured = Boolean(
       firebaseConfig.apiKey &&
@@ -2352,6 +2382,155 @@
       return `${formatDDMM(firstDate)} a ${formatDDMMYYYY(lastDate)}`;
     }
 
+    const MONTH_NAMES_PT = [
+      'Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho',
+      'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'
+    ];
+
+    function getOperationalWeeksForMonth(year, month1Based) {
+      // Uma semana operacional vai de Quinta a Domingo e pertence ao mês do seu Domingo.
+      // Assim, a última semana do mês é sempre a que termina no último domingo do mês!
+      const weeks = [];
+      const lastDayOfMonth = new Date(year, month1Based, 0, 12, 0, 0);
+      for (let d = 1; d <= lastDayOfMonth.getDate(); d++) {
+        const dt = new Date(year, month1Based - 1, d, 12, 0, 0);
+        if (dt.getDay() === 0) { // Domingo
+          const thu = addDays(dt, -3);
+          const thuISO = formatISO(thu);
+          weeks.push({
+            weekNumber: weeks.length + 1,
+            thursdayDate: thuISO,
+            thuObj: thu,
+            sunObj: dt,
+            shortRange: `${formatDDMM(thu)} a ${formatDDMM(dt)}`,
+            isLastSunday: isLastSundayOfMonth(dt)
+          });
+        }
+      }
+      return weeks;
+    }
+
+    function getActiveMonthKeyFromCurrentState() {
+      const weekDates = getWeekDates(currentState.thursdayDate);
+      const sundayObj = weekDates[3];
+      const y = sundayObj.getFullYear();
+      const m = String(sundayObj.getMonth() + 1).padStart(2, '0');
+      return `${y}-${m}`;
+    }
+
+    async function selectWeekByThursdayISO(targetThuISO, showFeedback = true) {
+      if (targetThuISO === currentState.thursdayDate) return;
+
+      if (userCanEdit()) {
+        await persistCurrentWeek(true);
+      }
+
+      const foundInHistory = historyState.find(item => item.thursdayDate === targetThuISO);
+      if (foundInHistory) {
+        currentState = restoreStateFromHistoryItem(foundInHistory);
+        if (userCanEdit()) {
+          await persistCurrentWeek(false);
+        }
+        if (showFeedback) {
+          showToast(`Semana carregada: ${foundInHistory.periodLabel}`);
+        }
+      } else {
+        currentState = createDefaultCurrentState(targetThuISO);
+        if (userCanEdit()) {
+          await persistCurrentWeek(false);
+        }
+        if (showFeedback) {
+          showToast(`Semana selecionada: ${getActivePeriodString()}`);
+        }
+      }
+
+      applyPermissionsUI();
+      renderDays();
+      updateSummaryAndPreview();
+    }
+
+    function renderMonthAndWeekSelector() {
+      const yearSelect = document.getElementById('yearSelectorInput');
+      const monthSelect = document.getElementById('monthSelectorInput');
+      const buttonsContainer = document.getElementById('monthWeekButtonsContainer');
+      const lastSundayHint = document.getElementById('lastSundayWeekHint');
+      if (!yearSelect || !monthSelect || !buttonsContainer) return;
+
+      const activeMonthKey = getActiveMonthKeyFromCurrentState();
+      const [activeYearStr, activeMonthStr] = activeMonthKey.split('-');
+      const activeYear = Number(activeYearStr);
+      const activeMonth = Number(activeMonthStr);
+
+      // Monta lista compacta de anos (2026 a 2030 + anos existentes no histórico)
+      const yearsSet = new Set([2026, 2027, 2028, 2029, 2030, activeYear, new Date().getFullYear()]);
+      (historyState || []).forEach(h => {
+        if (h.thursdayDate) yearsSet.add(Number(h.thursdayDate.slice(0, 4)));
+      });
+      const sortedYears = Array.from(yearsSet).sort((a, b) => a - b);
+
+      yearSelect.innerHTML = sortedYears
+        .map(yr => `<option value="${yr}" ${yr === activeYear ? 'selected' : ''}>${yr}</option>`)
+        .join('');
+
+      // Monta apenas os 12 meses referentes ao ano selecionado
+      const monthOptionsHtml = [];
+      for (let m = 1; m <= 12; m++) {
+        const key = `${activeYear}-${String(m).padStart(2, '0')}`;
+        const label = MONTH_NAMES_PT[m - 1];
+        monthOptionsHtml.push(`<option value="${key}" ${key === activeMonthKey ? 'selected' : ''}>${label}</option>`);
+      }
+      monthSelect.innerHTML = monthOptionsHtml.join('');
+
+      const monthWeeks = getOperationalWeeksForMonth(activeYear, activeMonth);
+      const monthName = MONTH_NAMES_PT[activeMonth - 1];
+      const lastWeekObj = monthWeeks[monthWeeks.length - 1];
+
+      if (lastSundayHint && lastWeekObj) {
+        lastSundayHint.textContent = `Último dom.: ${formatDDMM(lastWeekObj.sunObj)}`;
+      }
+
+      buttonsContainer.className = monthWeeks.length === 5
+        ? 'grid grid-cols-2 sm:grid-cols-5 gap-2'
+        : 'grid grid-cols-2 sm:grid-cols-4 gap-2';
+
+      buttonsContainer.innerHTML = monthWeeks.map(w => {
+        const isSelected = w.thursdayDate === currentState.thursdayDate;
+        const histMatch = historyState.find(h => h.thursdayDate === w.thursdayDate);
+        const hasRecords = histMatch && (Number(histMatch.total) > 0 || histMatch.reportSent || (histMatch.days || []).some(d => d.done || d.obs));
+        const totalBadge = histMatch ? `${histMatch.total} vis.` : 'Vazia';
+
+        return `
+          <button type="button" data-select-week-thu="${w.thursdayDate}"
+            class="p-2.5 rounded-xl border text-left transition active:scale-[0.98] flex flex-col justify-between gap-1 ${
+              isSelected
+                ? 'bg-amber-500 text-slate-950 border-amber-400 shadow-md shadow-amber-500/20'
+                : hasRecords
+                  ? 'bg-slate-850 hover:bg-slate-800 text-slate-100 border-emerald-500/35'
+                  : 'bg-slate-950/80 hover:bg-slate-850 text-slate-300 border-slate-800'
+            }">
+            <div class="flex items-center justify-between gap-1 w-full">
+              <span class="text-xs font-extrabold leading-tight">
+                Semana ${w.weekNumber}
+              </span>
+              ${w.isLastSunday ? `<span class="text-[9px] font-extrabold uppercase px-1.5 py-0.5 rounded ${isSelected ? 'bg-slate-950/20 text-slate-950' : 'bg-amber-500/15 text-amber-300'}">Última</span>` : ''}
+            </div>
+            <div class="text-[11px] font-semibold ${isSelected ? 'text-slate-900' : 'text-slate-400'}">
+              ${w.shortRange}
+            </div>
+            <div class="text-[10px] font-bold ${
+              isSelected
+                ? 'text-slate-950/80'
+                : hasRecords
+                  ? 'text-emerald-400'
+                  : 'text-slate-500'
+            }">
+              ${isSelected ? '● Selecionada' : totalBadge}
+            </div>
+          </button>
+        `;
+      }).join('');
+    }
+
     function isLastSundayOfMonth(sundayDateObj) {
       const nextSunday = addDays(sundayDateObj, 7);
       return nextSunday.getMonth() !== sundayDateObj.getMonth();
@@ -2546,13 +2725,15 @@
     }
 
     async function syncTeamCountBeforeAuth() {
-      if (isFirebaseConfigured && fbDb) {
+      if (isFirebaseConfigured && fbDb && navigator.onLine) {
         try {
           const snap = await get(ref(fbDb, 'memorial/users'));
           const val = snap.val();
           teamUsers = val ? Object.values(val) : [];
+          localStorage.setItem(STORAGE_KEY_USERS, JSON.stringify(teamUsers));
         } catch (e) {
-          console.error('Erro ao ler contagem de usuários:', e);
+          console.warn('Sem conexão ao ler contagem de usuários, usando cache local:', e);
+          loadDemoStorage();
         }
       } else {
         loadDemoStorage();
@@ -2612,6 +2793,13 @@
     function onAuthenticatedSuccess(profile) {
       currentUserProfile = profile;
       localStorage.setItem(STORAGE_KEY_LAST_EMAIL, profile.email);
+      localStorage.setItem(STORAGE_KEY_CACHED_PROFILE, JSON.stringify(profile));
+      if (!localStorage.getItem(STORAGE_KEY_LAST_ACTIVITY)) {
+        localStorage.setItem(STORAGE_KEY_LAST_ACTIVITY, String(Date.now()));
+      }
+
+      // Garante carregamento imediato dos dados locais antes mesmo da rede responder
+      loadDemoStorage();
 
       document.getElementById('authView').classList.add('hidden');
       document.getElementById('appMainContent').classList.remove('hidden');
@@ -2655,12 +2843,21 @@
       }
 
       if (isFirebaseConfigured && fbDb) {
+        renderTeamAdmin();
+        applyPermissionsUI();
+        renderDays();
+        updateSummaryAndPreview();
+        renderHistory();
+
         onValue(ref(fbDb, 'memorial/users'), (snap) => {
           const val = snap.val();
-          teamUsers = val ? Object.values(val) : [];
-          if (currentUserProfile && val && val[currentUserProfile.uid]) {
+          if (!val) return;
+          teamUsers = Object.values(val);
+          localStorage.setItem(STORAGE_KEY_USERS, JSON.stringify(teamUsers));
+          if (currentUserProfile && val[currentUserProfile.uid]) {
             currentUserProfile = val[currentUserProfile.uid];
-          } else if (currentUserProfile && val && !val[currentUserProfile.uid]) {
+            localStorage.setItem(STORAGE_KEY_CACHED_PROFILE, JSON.stringify(currentUserProfile));
+          } else if (currentUserProfile && !val[currentUserProfile.uid]) {
             handleLogout();
             showToast('Seu acesso foi removido pelo Administrador.');
             return;
@@ -2735,7 +2932,10 @@
         readOnlyBanner.classList.remove('hidden');
       }
 
-      document.getElementById('thursdayDateInput').disabled = !editable;
+      const yearSelEl = document.getElementById('yearSelectorInput');
+      if (yearSelEl) yearSelEl.disabled = !editable;
+      const monthSelEl = document.getElementById('monthSelectorInput');
+      if (monthSelEl) monthSelEl.disabled = !editable;
       document.getElementById('btnNextWeek').disabled = !editable;
 
       document.getElementById('chkReportSent').disabled = !editable;
@@ -2756,8 +2956,12 @@
 
     async function handleLogout() {
       currentUserProfile = null;
+      localStorage.removeItem(STORAGE_KEY_CACHED_PROFILE);
+      localStorage.removeItem(STORAGE_KEY_LAST_ACTIVITY);
       if (isFirebaseConfigured && fbAuth) {
-        await signOut(fbAuth);
+        try {
+          await signOut(fbAuth);
+        } catch (_) {}
       } else {
         localStorage.removeItem(STORAGE_KEY_SESSION);
       }
@@ -3011,14 +3215,7 @@
       const entries = getOrderedWeekEntries();
       const period = getActivePeriodString();
 
-      const activeStartEntry = entries[0];
-      const startLabelEl = document.getElementById('weekStartLabel');
-      if (startLabelEl && activeStartEntry) {
-        startLabelEl.textContent = `Início da Semana (${activeStartEntry.dayName})`;
-      }
-      document.getElementById('thursdayDateInput').value = activeStartEntry
-        ? formatISO(activeStartEntry.dateObj)
-        : currentState.thursdayDate;
+      renderMonthAndWeekSelector();
       document.getElementById('periodLabel').textContent = period;
 
       const totalDaysCount = entries.length;
@@ -3171,7 +3368,8 @@
       const yearSelect = document.getElementById('dashYearSelect');
       const yearLabel = document.getElementById('dashYearLabel');
 
-      const yearsSet = new Set([String(new Date().getFullYear())]);
+      const currentYearStr = String(new Date().getFullYear());
+      const yearsSet = new Set(['2026', '2027', '2028', '2029', '2030', currentYearStr]);
       allWeeks.forEach(w => {
         if (w.thursdayDate && w.thursdayDate.length >= 4) {
           yearsSet.add(w.thursdayDate.slice(0, 4));
@@ -3181,7 +3379,7 @@
       const sortedYears = Array.from(yearsSet).sort((a, b) => b.localeCompare(a));
       const selectedYear = yearSelect.value && yearsSet.has(yearSelect.value)
         ? yearSelect.value
-        : sortedYears[0];
+        : (yearsSet.has(currentYearStr) ? currentYearStr : sortedYears[0]);
 
       yearSelect.innerHTML = sortedYears
         .map(y => `<option value="${y}" ${y === selectedYear ? 'selected' : ''}>${y}</option>`)
@@ -3832,6 +4030,10 @@
         const password = document.getElementById('loginCredential').value;
 
         if (isFirebaseConfigured && fbAuth && fbDb) {
+          if (!navigator.onLine) {
+            showToast('Sem conexão com a internet. Conecte-se ao Wi-Fi ou dados móveis para entrar.');
+            return;
+          }
           try {
             const cred = await signInWithEmailAndPassword(fbAuth, email, password);
             const snap = await get(ref(fbDb, `memorial/users/${cred.user.uid}`));
@@ -3842,10 +4044,15 @@
               return;
             }
             localStorage.setItem(STORAGE_KEY_LAST_EMAIL, email);
+            localStorage.setItem(STORAGE_KEY_LAST_ACTIVITY, String(Date.now()));
             onAuthenticatedSuccess(profile);
             showToast(`Bem-vindo(a), ${profile.name}!`);
           } catch (err) {
-            showToast('E-mail ou senha inválidos.');
+            if (err && (err.code === 'auth/network-request-failed' || !navigator.onLine)) {
+              showToast('Sem conexão com a internet. Verifique o Wi-Fi ou dados móveis.');
+            } else {
+              showToast('E-mail ou senha inválidos.');
+            }
           }
         } else {
           loadDemoStorage();
@@ -3884,6 +4091,10 @@
         const assignedRole = isFirstAccount ? 'admin' : 'user';
 
         if (isFirebaseConfigured && fbAuth && fbDb) {
+          if (!navigator.onLine) {
+            showToast('Sem conexão com a internet. Conecte-se para concluir o cadastro.');
+            return;
+          }
           try {
             const cred = await createUserWithEmailAndPassword(fbAuth, email, password);
             const profile = {
@@ -4038,30 +4249,33 @@
         showToast('Dados atualizados!');
       });
 
-      document.getElementById('thursdayDateInput').addEventListener('change', async (e) => {
-        if (!e.target.value || !userCanEdit()) return;
-        const pickedDate = parseLocalDate(e.target.value);
-        const correspondingThursday = getThursdayOfWeek(pickedDate);
-        const targetThuISO = formatISO(correspondingThursday);
-
-        // Salva o estado da semana anterior antes de trocar de data
-        await persistCurrentWeek(true);
-
-        // Busca se já existe histórico para a semana selecionada no calendário
-        const foundInHistory = historyState.find(item => item.thursdayDate === targetThuISO);
-        if (foundInHistory) {
-          currentState = restoreStateFromHistoryItem(foundInHistory);
-          await persistCurrentWeek(false);
-          showToast(`Histórico carregado: semana ${foundInHistory.periodLabel}`);
-        } else {
-          currentState = createDefaultCurrentState(targetThuISO);
-          await persistCurrentWeek(false);
-          showToast(`Nova semana selecionada: ${getActivePeriodString()}`);
+      document.getElementById('yearSelectorInput').addEventListener('change', async (e) => {
+        if (!e.target.value) return;
+        const selectedYr = Number(e.target.value);
+        const currentMonthVal = document.getElementById('monthSelectorInput')?.value;
+        const targetMo = currentMonthVal ? Number(currentMonthVal.split('-')[1]) : 1;
+        const weeks = getOperationalWeeksForMonth(selectedYr, targetMo);
+        if (weeks.length > 0) {
+          await selectWeekByThursdayISO(weeks[0].thursdayDate, true);
         }
+      });
 
-        applyPermissionsUI();
-        renderDays();
-        updateSummaryAndPreview();
+      document.getElementById('monthSelectorInput').addEventListener('change', async (e) => {
+        if (!e.target.value) return;
+        const [yr, mo] = e.target.value.split('-').map(Number);
+        const weeks = getOperationalWeeksForMonth(yr, mo);
+        if (weeks.length > 0) {
+          await selectWeekByThursdayISO(weeks[0].thursdayDate, true);
+        }
+      });
+
+      document.getElementById('monthWeekButtonsContainer').addEventListener('click', async (e) => {
+        const btn = e.target.closest('button[data-select-week-thu]');
+        if (!btn) return;
+        const targetThuISO = btn.dataset.selectWeekThu;
+        if (targetThuISO) {
+          await selectWeekByThursdayISO(targetThuISO, true);
+        }
       });
 
       document.getElementById('adminSporadicMenu').addEventListener('change', async (e) => {
@@ -4397,19 +4611,94 @@
       setInterval(tick, 1000);
     }
 
+    let lastActivityWriteTs = 0;
+    function registerUserActivity() {
+      const now = Date.now();
+      if (now - lastActivityWriteTs > 5000) {
+        lastActivityWriteTs = now;
+        localStorage.setItem(STORAGE_KEY_LAST_ACTIVITY, String(now));
+      }
+    }
+
+    ['click', 'touchstart', 'keydown', 'input', 'scroll'].forEach(evt => {
+      window.addEventListener(evt, registerUserActivity, { passive: true });
+    });
+
+    async function checkSessionInactivityTimeout() {
+      if (!currentUserProfile) return;
+      const lastActivity = Number(localStorage.getItem(STORAGE_KEY_LAST_ACTIVITY) || 0);
+      if (!lastActivity) {
+        localStorage.setItem(STORAGE_KEY_LAST_ACTIVITY, String(Date.now()));
+        return;
+      }
+      if (Date.now() - lastActivity >= INACTIVITY_LIMIT_MS) {
+        // Protege alterações offline pendentes antes de encerrar sessão
+        if (!navigator.onLine || hasOfflinePendingChanges()) {
+          return;
+        }
+        await handleLogout();
+        showToast('Sessão encerrada após 1 hora sem interação. Entre novamente.');
+      }
+    }
+
+    setInterval(checkSessionInactivityTimeout, 15000);
+    document.addEventListener('visibilitychange', () => {
+      if (document.visibilityState === 'visible') {
+        checkSessionInactivityTimeout();
+      }
+    });
+
     window.addEventListener('DOMContentLoaded', async () => {
       startLiveClock();
       checkForApkUpdate();
       initEvents();
 
       if (isFirebaseConfigured && fbAuth && fbDb) {
+        // Se abrir o APK/site 100% sem internet e já houver sessão válida no aparelho, entra direto no modo offline
+        const cachedRaw = localStorage.getItem(STORAGE_KEY_CACHED_PROFILE);
+        const lastAct = Number(localStorage.getItem(STORAGE_KEY_LAST_ACTIVITY) || 0);
+        if (!navigator.onLine && cachedRaw) {
+          try {
+            const cachedProfile = JSON.parse(cachedRaw);
+            const isExpired = lastAct > 0 && (Date.now() - lastAct >= INACTIVITY_LIMIT_MS);
+            if (!isExpired || hasOfflinePendingChanges()) {
+              onAuthenticatedSuccess(cachedProfile);
+              showToast('Modo Offline: sessão restaurada no aparelho.');
+              return;
+            }
+          } catch (_) {}
+        }
+
         onAuthStateChanged(fbAuth, async (user) => {
           if (user) {
-            const snap = await get(ref(fbDb, `memorial/users/${user.uid}`));
-            const profile = snap.val();
-            if (profile) {
-              onAuthenticatedSuccess(profile);
+            const lastActCheck = Number(localStorage.getItem(STORAGE_KEY_LAST_ACTIVITY) || 0);
+            if (lastActCheck > 0 && (Date.now() - lastActCheck >= INACTIVITY_LIMIT_MS) && navigator.onLine && !hasOfflinePendingChanges()) {
+              await handleLogout();
+              showToast('Sessão expirada após 1 hora de inatividade.');
               return;
+            }
+
+            if (!navigator.onLine) {
+              const localCached = localStorage.getItem(STORAGE_KEY_CACHED_PROFILE);
+              if (localCached) {
+                onAuthenticatedSuccess(JSON.parse(localCached));
+                return;
+              }
+            }
+
+            try {
+              const snap = await get(ref(fbDb, `memorial/users/${user.uid}`));
+              const profile = snap.val();
+              if (profile) {
+                onAuthenticatedSuccess(profile);
+                return;
+              }
+            } catch (err) {
+              const localCached = localStorage.getItem(STORAGE_KEY_CACHED_PROFILE);
+              if (localCached) {
+                onAuthenticatedSuccess(JSON.parse(localCached));
+                return;
+              }
             }
           }
           await syncTeamCountBeforeAuth();
