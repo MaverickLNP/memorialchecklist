@@ -5,6 +5,7 @@ on:
   push:
     branches: [ main ]
     paths:
+      - 'index.html'
       - 'assets/**'
       - '.github/workflows/build-apk.yml'
 
@@ -42,15 +43,6 @@ jobs:
           npm init -y
           npm install @capacitor/core @capacitor/cli @capacitor/android @capacitor/assets @capacitor/app @capacitor/filesystem @capacitor-community/file-opener
           npx cap init "Visitação Memorial" "br.org.memorial.visitacao" --web-dir=www
-          node -e '
-            const fs = require("fs");
-            const cfg = JSON.parse(fs.readFileSync("capacitor.config.json", "utf8"));
-            cfg.server = {
-              url: "https://mavericklnp.github.io/memorialchecklist/",
-              cleartext: false
-            };
-            fs.writeFileSync("capacitor.config.json", JSON.stringify(cfg, null, 2));
-          '
           npx cap add android
           npx capacitor-assets generate --android
           npx cap sync android
