@@ -16,6 +16,12 @@
   <!-- Tailwind CSS -->
   <script src="https://cdn.tailwindcss.com"></script>
 
+  <!-- Chart.js para Dashboard Anual / Comparativo -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+
+  <!-- SheetJS (XLSX) para Exportação Oficial de Planilha Excel -->
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+
   <!-- Fonte Inter -->
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -69,6 +75,25 @@
     }
     .toast-enter {
       animation: slideUp 0.25s ease-out forwards;
+    }
+
+    /* Estilos exclusivos para impressão / geração de PDF oficial */
+    @media print {
+      body {
+        background: #ffffff !important;
+        color: #0f172a !important;
+        padding: 0 !important;
+      }
+      body > *:not(#printReportContainer) {
+        display: none !important;
+      }
+      #printReportContainer {
+        display: block !important;
+        position: static !important;
+        width: 100% !important;
+        background: #ffffff !important;
+        color: #0f172a !important;
+      }
     }
   </style>
 </head>
@@ -147,7 +172,7 @@
     </div>
   </header>
 
-  <!-- TELA DE AUTENTICAÇÃO UNIFICADA -->
+  <!-- TELA DE AUTENTICAÇÃO ESTÁVEL POR E-MAIL -->
   <section id="authView" class="max-w-md mx-auto px-4 pt-8 space-y-5">
     <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 sm:p-6 shadow-xl space-y-5">
       <div class="text-center space-y-1.5">
@@ -159,7 +184,7 @@
           Acesso ao Memorial
         </h2>
         <p class="text-xs sm:text-sm text-slate-400">
-          Identificação automática de perfil (Admin ou User) pelo seu e-mail
+          Entre com seu e-mail institucional ou pessoal cadastrado
         </p>
       </div>
 
@@ -178,7 +203,7 @@
         <div>
           <label for="loginEmail" class="block text-xs font-semibold text-slate-300 mb-1">E-mail</label>
           <input type="email" id="loginEmail" required autocomplete="email"
-            placeholder="nome@memorial.org.br"
+            placeholder="seu.email@exemplo.com"
             class="w-full bg-slate-950 border border-slate-700 focus:border-amber-400 rounded-xl px-3.5 py-2.5 text-sm text-white focus:outline-none transition" />
         </div>
         <div>
@@ -200,17 +225,18 @@
         </div>
         <div>
           <label for="regName" class="block text-xs font-semibold text-slate-300 mb-1">Nome Completo</label>
-          <input type="text" id="regName" required placeholder="Ex.: Leonardo"
+          <input type="text" id="regName" required placeholder="Ex.: Leonardo Pedrosa"
             class="w-full bg-slate-950 border border-slate-700 focus:border-amber-400 rounded-xl px-3.5 py-2.5 text-sm text-white focus:outline-none" />
         </div>
         <div>
           <label for="regRoleTitle" class="block text-xs font-semibold text-slate-300 mb-1">Função / Setor</label>
-          <input type="text" id="regRoleTitle" required placeholder="Ex.: Administração / Educativo"
+          <input type="text" id="regRoleTitle" required placeholder="Ex.: Administração / Educativo / Orientador"
             class="w-full bg-slate-950 border border-slate-700 focus:border-amber-400 rounded-xl px-3.5 py-2.5 text-sm text-white focus:outline-none" />
         </div>
         <div>
           <label for="regEmail" class="block text-xs font-semibold text-slate-300 mb-1">E-mail</label>
-          <input type="email" id="regEmail" required placeholder="nome@memorial.org.br"
+          <input type="email" id="regEmail" required autocomplete="email"
+            placeholder="seu.email@exemplo.com"
             class="w-full bg-slate-950 border border-slate-700 focus:border-amber-400 rounded-xl px-3.5 py-2.5 text-sm text-white focus:outline-none" />
         </div>
         <div>
@@ -228,6 +254,20 @@
 
   <!-- Conteúdo Principal -->
   <main id="appMainContent" class="hidden max-w-2xl mx-auto px-4 pt-5 space-y-5">
+
+    <!-- Banner de Fila Offline Pendente -->
+    <div id="offlinePendingBanner" class="hidden bg-amber-500/15 border border-amber-500/45 rounded-2xl p-3.5 flex items-center justify-between gap-3 text-xs sm:text-sm text-amber-200">
+      <div class="flex items-center gap-2.5">
+        <span class="w-2.5 h-2.5 rounded-full bg-amber-400 animate-ping shrink-0"></span>
+        <span>
+          <strong>Modo Offline Ativo:</strong> alterações salvas no aparelho e aguardando conexão para sincronizar.
+        </span>
+      </div>
+      <button id="btnForceSyncOffline" type="button"
+        class="px-3 py-1.5 rounded-lg bg-amber-500 text-slate-950 font-bold text-xs shrink-0 hover:bg-amber-400 transition">
+        Tentar Agora
+      </button>
+    </div>
 
     <div id="readOnlyBanner" class="hidden bg-amber-500/15 border border-amber-500/40 rounded-2xl p-3.5 flex items-center gap-3 text-xs sm:text-sm text-amber-200">
       <svg class="w-5 h-5 text-amber-400 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
@@ -279,7 +319,7 @@
           <summary class="list-none cursor-pointer flex items-center justify-between text-xs font-semibold text-slate-400 hover:text-amber-300 transition select-none">
             <span class="flex items-center gap-1.5">
               <svg class="w-3.5 h-3.5 text-amber-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6m0 0v6m-6 0h6m-6 0H6" />
               </svg>
               Visitas Esporádicas (Seg / Ter / Qua) — Admin
             </span>
@@ -410,12 +450,86 @@
             Enviado
           </span>
         </label>
+
+        <!-- Controle do Lembrete Automático de Domingo às 17h (APK Android) -->
+        <div id="sundayReminderBox" class="hidden pt-2 border-t border-slate-800/80 flex items-center justify-between gap-3">
+          <div class="text-xs text-slate-400">
+            <span class="font-semibold text-slate-200 block">Lembrete de Fechamento (Domingos às 17h)</span>
+            <span id="sundayReminderStatus">Alerta local no celular se o envio estiver pendente</span>
+          </div>
+          <button id="btnToggleSundayReminder" type="button"
+            class="px-3 py-1.5 rounded-lg bg-sky-500/15 hover:bg-sky-500/25 text-sky-300 border border-sky-500/30 text-xs font-bold transition shrink-0">
+            Ativar Alerta
+          </button>
+        </div>
       </div>
     </section>
 
-    <!-- ABA 2: HISTÓRICO DE SEMANAS -->
+    <!-- ABA 2: DASHBOARD ANUAL & HISTÓRICO DE SEMANAS -->
     <section id="viewHistory" class="hidden space-y-4">
-      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+
+      <!-- Dashboard Executivo Anual + Gráfico Comparativo -->
+      <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4 sm:p-5 shadow-lg space-y-4">
+        <div class="flex items-center justify-between gap-2 flex-wrap">
+          <div>
+            <h2 class="text-sm sm:text-base font-bold text-white flex items-center gap-2">
+              <span class="w-2 h-2 rounded-full bg-amber-400"></span>
+              <span>Dashboard Consolidado (<span id="dashYearLabel">2026</span>)</span>
+            </h2>
+            <p class="text-xs text-slate-400">Indicadores acumulados e evolução das últimas semanas</p>
+          </div>
+          <select id="dashYearSelect"
+            class="bg-slate-850 border border-slate-700 rounded-xl px-3 py-1.5 text-xs font-bold text-amber-300 focus:outline-none focus:border-amber-400">
+            <option value="2026">2026</option>
+          </select>
+        </div>
+
+        <!-- KPIs -->
+        <div class="grid grid-cols-3 gap-2.5">
+          <div class="bg-slate-950/80 border border-slate-800 rounded-xl p-3">
+            <span class="block text-[10px] sm:text-[11px] font-semibold uppercase tracking-wider text-slate-400">Total no Ano</span>
+            <span id="kpiYearTotal" class="text-lg sm:text-2xl font-extrabold text-white mt-0.5 block">0</span>
+          </div>
+          <div class="bg-slate-950/80 border border-slate-800 rounded-xl p-3">
+            <span class="block text-[10px] sm:text-[11px] font-semibold uppercase tracking-wider text-slate-400">Média / Semana</span>
+            <span id="kpiWeekAvg" class="text-lg sm:text-2xl font-extrabold text-amber-400 mt-0.5 block">0</span>
+          </div>
+          <div class="bg-slate-950/80 border border-slate-800 rounded-xl p-3">
+            <span class="block text-[10px] sm:text-[11px] font-semibold uppercase tracking-wider text-slate-400">Recorde Semanal</span>
+            <span id="kpiBestWeek" class="text-lg sm:text-2xl font-extrabold text-emerald-400 mt-0.5 block">0</span>
+          </div>
+        </div>
+
+        <!-- Gráfico de Barras -->
+        <div class="bg-slate-950/60 border border-slate-800/80 rounded-xl p-3">
+          <div class="h-44 sm:h-52 w-full">
+            <canvas id="visitorsTrendChart"></canvas>
+          </div>
+        </div>
+
+        <!-- Exportação Oficial para Diretoria / Prestação de Contas -->
+        <div class="pt-1 border-t border-slate-800/80 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
+          <span class="text-xs font-semibold text-slate-300">Exportar Prestação de Contas:</span>
+          <div class="grid grid-cols-2 sm:flex items-center gap-2">
+            <button id="btnExportExcel" type="button"
+              class="px-3.5 py-2 rounded-xl bg-emerald-600/20 hover:bg-emerald-600/30 active:scale-95 text-emerald-300 border border-emerald-500/35 font-bold text-xs transition flex items-center justify-center gap-1.5">
+              <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+              </svg>
+              <span>Excel (.xlsx)</span>
+            </button>
+            <button id="btnExportPdf" type="button"
+              class="px-3.5 py-2 rounded-xl bg-rose-500/15 hover:bg-rose-500/25 active:scale-95 text-rose-300 border border-rose-500/35 font-bold text-xs transition flex items-center justify-center gap-1.5">
+              <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
+              </svg>
+              <span>Relatório PDF</span>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-1">
         <div>
           <h2 class="text-base sm:text-lg font-bold text-white">Semanas Arquivadas</h2>
           <p class="text-xs text-slate-400">Registros consolidados das semanas operacionais</p>
@@ -426,7 +540,7 @@
             <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
             </svg>
-            <span>Relatório do Mês</span>
+            <span>Relatório WhatsApp do Mês</span>
           </button>
           <button id="btnSaveCurrentFromHistory" type="button"
             class="px-3.5 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 active:scale-95 text-slate-950 font-bold text-xs transition disabled:opacity-40 disabled:pointer-events-none">
@@ -445,16 +559,35 @@
           <h2 class="text-base sm:text-lg font-bold text-white flex items-center gap-2">
             <span>Painel do Administrador</span>
           </h2>
-          <p class="text-xs text-slate-400">Promova novos Admins, defina permissões de edição, resete senhas ou libere vagas</p>
+          <p class="text-xs text-slate-400">Promova novos Admins, gerencie permissões de edição, envie reset de senha ou libere vagas</p>
         </div>
         <span id="adminSlotsCounter" class="text-xs font-extrabold px-3 py-1.5 rounded-xl bg-amber-500/15 text-amber-300 border border-amber-500/30 shrink-0">
           0 / 11
         </span>
       </div>
 
+      <!-- Importação / Carga Oficial da Planilha 2026 para o Firebase -->
+      <div class="bg-slate-900 border border-emerald-500/30 rounded-2xl p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+        <div class="space-y-1">
+          <h3 class="text-sm font-bold text-emerald-300 flex items-center gap-2">
+            <span>Base Histórica 2026 (Reabertura 08/03 a 20/11)</span>
+          </h3>
+          <p class="text-xs text-slate-400">
+            37 semanas consolidadas (9.863 visitantes) + semana atual (19/11) prontas para gravar na nuvem do Firebase para toda a equipe.
+          </p>
+        </div>
+        <button id="btnSync2026HistoryToFirebase" type="button"
+          class="px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 active:scale-95 text-white text-xs font-bold transition shrink-0 shadow-lg shadow-emerald-950/50">
+          Gravar Histórico 2026 no Firebase
+        </button>
+      </div>
+
       <div id="teamMembersContainer" class="space-y-3"></div>
     </section>
   </main>
+
+  <!-- Container Oculto Exclusivo para Impressão / PDF Oficial -->
+  <div id="printReportContainer" class="hidden p-8 bg-white text-slate-900"></div>
 
   <!-- Modal Editar Membro -->
   <div id="editMemberModal" class="hidden fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4">
@@ -549,7 +682,6 @@
         Melhorias e correções no aplicativo do Memorial.
       </div>
 
-      <!-- Barra de progresso interna (oculta até clicar em Download) -->
       <div id="apkDownloadProgressBox" class="hidden space-y-1.5">
         <div class="flex items-center justify-between text-xs">
           <span id="apkDownloadStatusText" class="text-amber-300 font-semibold">Baixando atualização...</span>
@@ -624,11 +756,21 @@
       { key: 'wed', label: 'Quarta-feira', offset: -1 }
     ];
 
+    // Chips rápidos de 1 toque para agilizar o registro na recepção
+    const QUICK_OBS_TAGS = [
+      'Visita Escolar',
+      'Feriado',
+      'Evento Especial',
+      'Chuva / Baixo Fluxo'
+    ];
+
     const STORAGE_KEY_CURRENT = 'memorial_visitacao_atual_v2';
     const STORAGE_KEY_HISTORY = 'memorial_visitacao_historico_v2';
     const STORAGE_KEY_USERS = 'memorial_visitacao_users_v2';
     const STORAGE_KEY_SESSION = 'memorial_visitacao_session_v2';
     const STORAGE_KEY_LAST_EMAIL = 'memorial_visitacao_last_email_v2';
+    const STORAGE_KEY_OFFLINE_DIRTY = 'memorial_offline_pending_sync_v1';
+    const STORAGE_KEY_SUNDAY_REMINDER = 'memorial_sunday_reminder_enabled_v1';
 
     const isFirebaseConfigured = Boolean(
       firebaseConfig.apiKey &&
@@ -640,6 +782,7 @@
     let fbApp = null;
     let fbAuth = null;
     let fbDb = null;
+    let isFirebaseConnected = false;
 
     if (isFirebaseConfigured) {
       try {
@@ -653,20 +796,1412 @@
 
     const INITIAL_HISTORY = [
       {
-        id: 'hist_2026_11_12',
-        thursdayDate: '2026-11-12',
-        periodLabel: '12/11 a 15/11/2026',
-        total: 236,
-        reportSent: true,
-        savedAt: '15/11/2026',
-        days: [
-          { dayName: 'Quinta-feira', dateShort: '12/11', visitors: 80, obs: '', done: true },
-          { dayName: 'Sexta-feira', dateShort: '13/11', visitors: 14, obs: '1 visita escolar remarcada (ausente)', done: true },
-          { dayName: 'Sábado', dateShort: '14/11', visitors: 71, obs: '', done: true },
-          { dayName: 'Domingo', dateShort: '15/11', visitors: 71, obs: '', done: true }
-        ]
+            "id": "hist_2026_11_12",
+            "thursdayDate": "2026-11-12",
+            "periodLabel": "12/11 a 15/11/2026",
+            "total": 236,
+            "reportSent": true,
+            "savedAt": "15/11/2026",
+            "days": [
+                  {
+                        "dayName": "Quinta-feira",
+                        "dateShort": "12/11",
+                        "visitors": 80,
+                        "obs": "Escola Municipal Finlandi (10h: 39) • Colegio Estadual Maranhão (16h: 28)",
+                        "done": true
+                  },
+                  {
+                        "dayName": "Sexta-feira",
+                        "dateShort": "13/11",
+                        "visitors": 14,
+                        "obs": "",
+                        "done": true
+                  },
+                  {
+                        "dayName": "Sábado",
+                        "dateShort": "14/11",
+                        "visitors": 71,
+                        "obs": "",
+                        "done": true
+                  },
+                  {
+                        "dayName": "Domingo",
+                        "dateShort": "15/11",
+                        "visitors": 71,
+                        "obs": "",
+                        "done": true
+                  }
+            ]
+      },
+      {
+            "id": "hist_2026_11_05",
+            "thursdayDate": "2026-11-05",
+            "periodLabel": "05/11 a 08/11/2026",
+            "total": 344,
+            "reportSent": true,
+            "savedAt": "08/11/2026",
+            "days": [
+                  {
+                        "dayName": "Quinta-feira",
+                        "dateShort": "05/11",
+                        "visitors": 159,
+                        "obs": "Colégio Santo Inácio (11h: 53) • Colegio Estadual Varzea da alegria (14h: 99)",
+                        "done": true
+                  },
+                  {
+                        "dayName": "Sexta-feira",
+                        "dateShort": "06/11",
+                        "visitors": 113,
+                        "obs": "Colégio Santo Inácio (11h: 58) • Colégio Estatual Rose Klabin (12h: 42)",
+                        "done": true
+                  },
+                  {
+                        "dayName": "Sábado",
+                        "dateShort": "07/11",
+                        "visitors": 32,
+                        "obs": "",
+                        "done": true
+                  },
+                  {
+                        "dayName": "Domingo",
+                        "dateShort": "08/11",
+                        "visitors": 40,
+                        "obs": "",
+                        "done": true
+                  }
+            ]
+      },
+      {
+            "id": "hist_2026_10_29",
+            "thursdayDate": "2026-10-29",
+            "periodLabel": "29/10 a 01/11/2026",
+            "total": 485,
+            "reportSent": true,
+            "savedAt": "01/11/2026",
+            "days": [
+                  {
+                        "dayName": "Quinta-feira",
+                        "dateShort": "29/10",
+                        "visitors": 179,
+                        "obs": "DIVERSAS (155)",
+                        "done": true
+                  },
+                  {
+                        "dayName": "Sexta-feira",
+                        "dateShort": "30/10",
+                        "visitors": 26,
+                        "obs": "",
+                        "done": true
+                  },
+                  {
+                        "dayName": "Sábado",
+                        "dateShort": "31/10",
+                        "visitors": 172,
+                        "obs": "Professores de Arraial do Cabo (15h: 33)",
+                        "done": true
+                  },
+                  {
+                        "dayName": "Domingo",
+                        "dateShort": "01/11",
+                        "visitors": 108,
+                        "obs": "",
+                        "done": true
+                  }
+            ]
+      },
+      {
+            "id": "hist_2026_10_22",
+            "thursdayDate": "2026-10-22",
+            "periodLabel": "22/10 a 25/10/2026",
+            "total": 428,
+            "reportSent": true,
+            "savedAt": "25/10/2026",
+            "days": [
+                  {
+                        "dayName": "Quinta-feira",
+                        "dateShort": "22/10",
+                        "visitors": 116,
+                        "obs": "ISERJ/FAETEC (10h: 33) • E. M. Vereador Pedro Moreira (15h: 42)",
+                        "done": true
+                  },
+                  {
+                        "dayName": "Sexta-feira",
+                        "dateShort": "23/10",
+                        "visitors": 157,
+                        "obs": "Colégio Franklin Carneiro (10h: 42) • Colégio Santo Inácio (11h: 33) • E.M. Ministro Gama Filho (13h30: 44)",
+                        "done": true
+                  },
+                  {
+                        "dayName": "Sábado",
+                        "dateShort": "24/10",
+                        "visitors": 124,
+                        "obs": "",
+                        "done": true
+                  },
+                  {
+                        "dayName": "Domingo",
+                        "dateShort": "25/10",
+                        "visitors": 31,
+                        "obs": "",
+                        "done": true
+                  }
+            ]
+      },
+      {
+            "id": "hist_2026_10_15",
+            "thursdayDate": "2026-10-15",
+            "periodLabel": "15/10 a 18/10/2026",
+            "total": 255,
+            "reportSent": true,
+            "savedAt": "18/10/2026",
+            "days": [
+                  {
+                        "dayName": "Quinta-feira",
+                        "dateShort": "15/10",
+                        "visitors": 39,
+                        "obs": "Equipe Interdisciplinar - Redes da Maré (14h: 12)",
+                        "done": true
+                  },
+                  {
+                        "dayName": "Sexta-feira",
+                        "dateShort": "16/10",
+                        "visitors": 23,
+                        "obs": "",
+                        "done": true
+                  },
+                  {
+                        "dayName": "Sábado",
+                        "dateShort": "17/10",
+                        "visitors": 88,
+                        "obs": "UERJ (disciplina Direitos Humanos e Educação) (10h: 12)",
+                        "done": true
+                  },
+                  {
+                        "dayName": "Domingo",
+                        "dateShort": "18/10",
+                        "visitors": 105,
+                        "obs": "",
+                        "done": true
+                  }
+            ]
+      },
+      {
+            "id": "hist_2026_10_08",
+            "thursdayDate": "2026-10-08",
+            "periodLabel": "08/10 a 11/10/2026",
+            "total": 297,
+            "reportSent": true,
+            "savedAt": "11/10/2026",
+            "days": [
+                  {
+                        "dayName": "Quinta-feira",
+                        "dateShort": "08/10",
+                        "visitors": 47,
+                        "obs": "Escola Municipal Anísio Spinola Teixeira (10h: 43)",
+                        "done": true
+                  },
+                  {
+                        "dayName": "Sexta-feira",
+                        "dateShort": "09/10",
+                        "visitors": 118,
+                        "obs": "Colégio Pedro II Engenho Novo II (2) (10h e 13h30: 76)",
+                        "done": true
+                  },
+                  {
+                        "dayName": "Sábado",
+                        "dateShort": "10/10",
+                        "visitors": 47,
+                        "obs": "SEM LUZ (abertura 14h30",
+                        "done": true
+                  },
+                  {
+                        "dayName": "Domingo",
+                        "dateShort": "11/10",
+                        "visitors": 85,
+                        "obs": "",
+                        "done": true
+                  }
+            ]
+      },
+      {
+            "id": "hist_2026_10_01",
+            "thursdayDate": "2026-10-01",
+            "periodLabel": "01/10 a 04/10/2026",
+            "total": 200,
+            "reportSent": true,
+            "savedAt": "04/10/2026",
+            "days": [
+                  {
+                        "dayName": "Quinta-feira",
+                        "dateShort": "01/10",
+                        "visitors": 67,
+                        "obs": "Atuacao Escola Bilíngue (13h: 50)",
+                        "done": true
+                  },
+                  {
+                        "dayName": "Sexta-feira",
+                        "dateShort": "02/10",
+                        "visitors": 52,
+                        "obs": "CIEP 249, Pastor Waldemar Zarro (11h: 37)",
+                        "done": true
+                  },
+                  {
+                        "dayName": "Sábado",
+                        "dateShort": "03/10",
+                        "visitors": 40,
+                        "obs": "",
+                        "done": true
+                  },
+                  {
+                        "dayName": "Domingo",
+                        "dateShort": "04/10",
+                        "visitors": 41,
+                        "obs": "ELEIÇÃO (abertura 15h",
+                        "done": true
+                  }
+            ]
+      },
+      {
+            "id": "hist_2026_09_24",
+            "thursdayDate": "2026-09-24",
+            "periodLabel": "24/09 a 27/09/2026",
+            "total": 284,
+            "reportSent": true,
+            "savedAt": "27/09/2026",
+            "days": [
+                  {
+                        "dayName": "Quinta-feira",
+                        "dateShort": "24/09",
+                        "visitors": 47,
+                        "obs": "Colégio Estadual Pref. Luiz Guimarães (10h: 26)",
+                        "done": true
+                  },
+                  {
+                        "dayName": "Sexta-feira",
+                        "dateShort": "25/09",
+                        "visitors": 50,
+                        "obs": "Centro Educacional Silva Florencio (16h: 23)",
+                        "done": true
+                  },
+                  {
+                        "dayName": "Sábado",
+                        "dateShort": "26/09",
+                        "visitors": 80,
+                        "obs": "",
+                        "done": true
+                  },
+                  {
+                        "dayName": "Domingo",
+                        "dateShort": "27/09",
+                        "visitors": 107,
+                        "obs": "Elizer Max (10h: 50)",
+                        "done": true
+                  }
+            ]
+      },
+      {
+            "id": "hist_2026_09_17",
+            "thursdayDate": "2026-09-17",
+            "periodLabel": "17/09 a 20/09/2026",
+            "total": 397,
+            "reportSent": true,
+            "savedAt": "20/09/2026",
+            "days": [
+                  {
+                        "dayName": "Quinta-feira",
+                        "dateShort": "17/09",
+                        "visitors": 118,
+                        "obs": "Colégio Recanto (10h: 51) • Colégio Pluz (13h: 45)",
+                        "done": true
+                  },
+                  {
+                        "dayName": "Sexta-feira",
+                        "dateShort": "18/09",
+                        "visitors": 118,
+                        "obs": "Colégio Estadual Duque de Caxias (21) • Apogeu São Tomas De Aquino (42)",
+                        "done": true
+                  },
+                  {
+                        "dayName": "Sábado",
+                        "dateShort": "19/09",
+                        "visitors": 79,
+                        "obs": "Espontânea (11h: 3) • Espontânea (15h: 12)",
+                        "done": true
+                  },
+                  {
+                        "dayName": "Domingo",
+                        "dateShort": "20/09",
+                        "visitors": 82,
+                        "obs": "",
+                        "done": true
+                  }
+            ]
+      },
+      {
+            "id": "hist_2026_09_10",
+            "thursdayDate": "2026-09-10",
+            "periodLabel": "10/09 a 13/09/2026",
+            "total": 135,
+            "reportSent": true,
+            "savedAt": "13/09/2026",
+            "days": [
+                  {
+                        "dayName": "Quinta-feira",
+                        "dateShort": "10/09",
+                        "visitors": 0,
+                        "obs": "SEM ENERGIA",
+                        "done": true
+                  },
+                  {
+                        "dayName": "Sexta-feira",
+                        "dateShort": "11/09",
+                        "visitors": 0,
+                        "obs": "SEM ENERGIA",
+                        "done": true
+                  },
+                  {
+                        "dayName": "Sábado",
+                        "dateShort": "12/09",
+                        "visitors": 67,
+                        "obs": "",
+                        "done": true
+                  },
+                  {
+                        "dayName": "Domingo",
+                        "dateShort": "13/09",
+                        "visitors": 68,
+                        "obs": "",
+                        "done": true
+                  }
+            ]
+      },
+      {
+            "id": "hist_2026_09_03",
+            "thursdayDate": "2026-09-03",
+            "periodLabel": "03/09 a 06/09/2026",
+            "total": 140,
+            "reportSent": true,
+            "savedAt": "06/09/2026",
+            "days": [
+                  {
+                        "dayName": "Quinta-feira",
+                        "dateShort": "03/09",
+                        "visitors": 83,
+                        "obs": "Colégio Recanto (14h30: 57) • Hashomer Hatzair (16h: 8)",
+                        "done": true
+                  },
+                  {
+                        "dayName": "Sexta-feira",
+                        "dateShort": "04/09",
+                        "visitors": 10,
+                        "obs": "",
+                        "done": true
+                  },
+                  {
+                        "dayName": "Sábado",
+                        "dateShort": "05/09",
+                        "visitors": 47,
+                        "obs": "MANHÃ SEM ENERGIA • Espontânea (15h: 4)",
+                        "done": true
+                  },
+                  {
+                        "dayName": "Domingo",
+                        "dateShort": "06/09",
+                        "visitors": 0,
+                        "obs": "SEM ENERGIA",
+                        "done": true
+                  }
+            ]
+      },
+      {
+            "id": "hist_2026_08_27",
+            "thursdayDate": "2026-08-27",
+            "periodLabel": "27/08 a 30/08/2026",
+            "total": 215,
+            "reportSent": true,
+            "savedAt": "30/08/2026",
+            "days": [
+                  {
+                        "dayName": "Quinta-feira",
+                        "dateShort": "27/08",
+                        "visitors": 20,
+                        "obs": "",
+                        "done": true
+                  },
+                  {
+                        "dayName": "Sexta-feira",
+                        "dateShort": "28/08",
+                        "visitors": 60,
+                        "obs": "CIEP 394 (10h: 41)",
+                        "done": true
+                  },
+                  {
+                        "dayName": "Sábado",
+                        "dateShort": "29/08",
+                        "visitors": 60,
+                        "obs": "",
+                        "done": true
+                  },
+                  {
+                        "dayName": "Domingo",
+                        "dateShort": "30/08",
+                        "visitors": 75,
+                        "obs": "Espontânea (15h: 4)",
+                        "done": true
+                  }
+            ]
+      },
+      {
+            "id": "hist_2026_08_20",
+            "thursdayDate": "2026-08-20",
+            "periodLabel": "20/08 a 23/08/2026",
+            "total": 252,
+            "reportSent": true,
+            "savedAt": "23/08/2026",
+            "days": [
+                  {
+                        "dayName": "Quinta-feira",
+                        "dateShort": "20/08",
+                        "visitors": 50,
+                        "obs": "Colégio Maricá (14h: 45)",
+                        "done": true
+                  },
+                  {
+                        "dayName": "Sexta-feira",
+                        "dateShort": "21/08",
+                        "visitors": 72,
+                        "obs": "",
+                        "done": true
+                  },
+                  {
+                        "dayName": "Sábado",
+                        "dateShort": "22/08",
+                        "visitors": 60,
+                        "obs": "",
+                        "done": true
+                  },
+                  {
+                        "dayName": "Domingo",
+                        "dateShort": "23/08",
+                        "visitors": 70,
+                        "obs": "",
+                        "done": true
+                  }
+            ]
+      },
+      {
+            "id": "hist_2026_08_13",
+            "thursdayDate": "2026-08-13",
+            "periodLabel": "13/08 a 16/08/2026",
+            "total": 231,
+            "reportSent": true,
+            "savedAt": "16/08/2026",
+            "days": [
+                  {
+                        "dayName": "Quinta-feira",
+                        "dateShort": "13/08",
+                        "visitors": 66,
+                        "obs": "Colégio Estatual Vital Brasil (11h: 40)",
+                        "done": true
+                  },
+                  {
+                        "dayName": "Sexta-feira",
+                        "dateShort": "14/08",
+                        "visitors": 12,
+                        "obs": "de acordo com o sympla",
+                        "done": true
+                  },
+                  {
+                        "dayName": "Sábado",
+                        "dateShort": "15/08",
+                        "visitors": 66,
+                        "obs": "Espontânea (11h: 13) • de acordo com o sympla • Espontânea (15h: 5)",
+                        "done": true
+                  },
+                  {
+                        "dayName": "Domingo",
+                        "dateShort": "16/08",
+                        "visitors": 87,
+                        "obs": "Espontânea (11h: 7) • Espontânea (15h: 3)",
+                        "done": true
+                  }
+            ]
+      },
+      {
+            "id": "hist_2026_08_06",
+            "thursdayDate": "2026-08-06",
+            "periodLabel": "06/08 a 09/08/2026",
+            "total": 142,
+            "reportSent": true,
+            "savedAt": "09/08/2026",
+            "days": [
+                  {
+                        "dayName": "Quinta-feira",
+                        "dateShort": "06/08",
+                        "visitors": 14,
+                        "obs": "",
+                        "done": true
+                  },
+                  {
+                        "dayName": "Sexta-feira",
+                        "dateShort": "07/08",
+                        "visitors": 13,
+                        "obs": "",
+                        "done": true
+                  },
+                  {
+                        "dayName": "Sábado",
+                        "dateShort": "08/08",
+                        "visitors": 42,
+                        "obs": "",
+                        "done": true
+                  },
+                  {
+                        "dayName": "Domingo",
+                        "dateShort": "09/08",
+                        "visitors": 73,
+                        "obs": "Espontânea (11h: 23)",
+                        "done": true
+                  }
+            ]
+      },
+      {
+            "id": "hist_2026_07_30",
+            "thursdayDate": "2026-07-30",
+            "periodLabel": "30/07 a 02/08/2026",
+            "total": 369,
+            "reportSent": true,
+            "savedAt": "02/08/2026",
+            "days": [
+                  {
+                        "dayName": "Quinta-feira",
+                        "dateShort": "30/07",
+                        "visitors": 34,
+                        "obs": "",
+                        "done": true
+                  },
+                  {
+                        "dayName": "Sexta-feira",
+                        "dateShort": "31/07",
+                        "visitors": 105,
+                        "obs": "Ciep Leonel Brizola (11h: 54)",
+                        "done": true
+                  },
+                  {
+                        "dayName": "Sábado",
+                        "dateShort": "01/08",
+                        "visitors": 83,
+                        "obs": "",
+                        "done": true
+                  },
+                  {
+                        "dayName": "Domingo",
+                        "dateShort": "02/08",
+                        "visitors": 147,
+                        "obs": "Espontânea (11h: 4) • Estrela de Davi (14h: 51)",
+                        "done": true
+                  }
+            ]
+      },
+      {
+            "id": "hist_2026_07_23",
+            "thursdayDate": "2026-07-23",
+            "periodLabel": "23/07 a 26/07/2026",
+            "total": 356,
+            "reportSent": true,
+            "savedAt": "26/07/2026",
+            "days": [
+                  {
+                        "dayName": "Quinta-feira",
+                        "dateShort": "23/07",
+                        "visitors": 93,
+                        "obs": "",
+                        "done": true
+                  },
+                  {
+                        "dayName": "Sexta-feira",
+                        "dateShort": "24/07",
+                        "visitors": 34,
+                        "obs": "",
+                        "done": true
+                  },
+                  {
+                        "dayName": "Sábado",
+                        "dateShort": "25/07",
+                        "visitors": 88,
+                        "obs": "Espontânea (11h: 3) • Espontânea (15h: 11)",
+                        "done": true
+                  },
+                  {
+                        "dayName": "Domingo",
+                        "dateShort": "26/07",
+                        "visitors": 141,
+                        "obs": "Espontânea (11h: 15) • Espontânea (15h: 25)",
+                        "done": true
+                  }
+            ]
+      },
+      {
+            "id": "hist_2026_07_16",
+            "thursdayDate": "2026-07-16",
+            "periodLabel": "16/07 a 19/07/2026",
+            "total": 207,
+            "reportSent": true,
+            "savedAt": "19/07/2026",
+            "days": [
+                  {
+                        "dayName": "Quinta-feira",
+                        "dateShort": "16/07",
+                        "visitors": 37,
+                        "obs": "",
+                        "done": true
+                  },
+                  {
+                        "dayName": "Sexta-feira",
+                        "dateShort": "17/07",
+                        "visitors": 52,
+                        "obs": "",
+                        "done": true
+                  },
+                  {
+                        "dayName": "Sábado",
+                        "dateShort": "18/07",
+                        "visitors": 43,
+                        "obs": "Espontânea (11h: 41) • Espontânea (15h: 2)",
+                        "done": true
+                  },
+                  {
+                        "dayName": "Domingo",
+                        "dateShort": "19/07",
+                        "visitors": 75,
+                        "obs": "Espontânea (11h: 7) • Espontânea (15h: 4)",
+                        "done": true
+                  }
+            ]
+      },
+      {
+            "id": "hist_2026_07_09",
+            "thursdayDate": "2026-07-09",
+            "periodLabel": "09/07 a 12/07/2026",
+            "total": 312,
+            "reportSent": true,
+            "savedAt": "12/07/2026",
+            "days": [
+                  {
+                        "dayName": "Quinta-feira",
+                        "dateShort": "09/07",
+                        "visitors": 40,
+                        "obs": "",
+                        "done": true
+                  },
+                  {
+                        "dayName": "Sexta-feira",
+                        "dateShort": "10/07",
+                        "visitors": 84,
+                        "obs": "Colégio e Curso Progressão (10h: 50)",
+                        "done": true
+                  },
+                  {
+                        "dayName": "Sábado",
+                        "dateShort": "11/07",
+                        "visitors": 113,
+                        "obs": "Espontânea (11h: 3) • Espontânea (15h: 14)",
+                        "done": true
+                  },
+                  {
+                        "dayName": "Domingo",
+                        "dateShort": "12/07",
+                        "visitors": 75,
+                        "obs": "Espontânea (11h: 7) • Espontânea (15h: 4)",
+                        "done": true
+                  }
+            ]
+      },
+      {
+            "id": "hist_2026_07_02",
+            "thursdayDate": "2026-07-02",
+            "periodLabel": "02/07 a 05/07/2026",
+            "total": 109,
+            "reportSent": true,
+            "savedAt": "05/07/2026",
+            "days": [
+                  {
+                        "dayName": "Quinta-feira",
+                        "dateShort": "02/07",
+                        "visitors": 28,
+                        "obs": "",
+                        "done": true
+                  },
+                  {
+                        "dayName": "Sexta-feira",
+                        "dateShort": "03/07",
+                        "visitors": 17,
+                        "obs": "",
+                        "done": true
+                  },
+                  {
+                        "dayName": "Sábado",
+                        "dateShort": "04/07",
+                        "visitors": 46,
+                        "obs": "Espontânea (11h: 11) • Espontânea (15h: 7)",
+                        "done": true
+                  },
+                  {
+                        "dayName": "Domingo",
+                        "dateShort": "05/07",
+                        "visitors": 18,
+                        "obs": "",
+                        "done": true
+                  }
+            ]
+      },
+      {
+            "id": "hist_2026_06_25",
+            "thursdayDate": "2026-06-25",
+            "periodLabel": "25/06 a 28/06/2026",
+            "total": 422,
+            "reportSent": true,
+            "savedAt": "28/06/2026",
+            "days": [
+                  {
+                        "dayName": "Quinta-feira",
+                        "dateShort": "25/06",
+                        "visitors": 89,
+                        "obs": "Colégio Bonfim (10h: 29) • IFRJ Química (15h: 36)",
+                        "done": true
+                  },
+                  {
+                        "dayName": "Sexta-feira",
+                        "dateShort": "26/06",
+                        "visitors": 123,
+                        "obs": "Escola Municipal Aldebarã (11h: 34) • Colégio Nossa Senhora das Dores (15h: 75)",
+                        "done": true
+                  },
+                  {
+                        "dayName": "Sábado",
+                        "dateShort": "27/06",
+                        "visitors": 97,
+                        "obs": "Espontânea (11h: 1) • Seti Seminário (14h30: 57)",
+                        "done": true
+                  },
+                  {
+                        "dayName": "Domingo",
+                        "dateShort": "28/06",
+                        "visitors": 113,
+                        "obs": "Espontânea (11h: 8) • Grupo Roland Fichberg (11h30: 12) • Espontânea (15h: 16)",
+                        "done": true
+                  }
+            ]
+      },
+      {
+            "id": "hist_2026_06_18",
+            "thursdayDate": "2026-06-18",
+            "periodLabel": "18/06 a 21/06/2026",
+            "total": 254,
+            "reportSent": true,
+            "savedAt": "21/06/2026",
+            "days": [
+                  {
+                        "dayName": "Quinta-feira",
+                        "dateShort": "18/06",
+                        "visitors": 58,
+                        "obs": "EsEFEx (10h: 37)",
+                        "done": true
+                  },
+                  {
+                        "dayName": "Sexta-feira",
+                        "dateShort": "19/06",
+                        "visitors": 51,
+                        "obs": "Turma Pedagogia PUC (10h: 8) • Colégio Vicentino Imaculada Cenceição (14h: 23)",
+                        "done": true
+                  },
+                  {
+                        "dayName": "Sábado",
+                        "dateShort": "20/06",
+                        "visitors": 95,
+                        "obs": "Espontânea (11h: 4) • Mesa Anne Frank (15h: 11)",
+                        "done": true
+                  },
+                  {
+                        "dayName": "Domingo",
+                        "dateShort": "21/06",
+                        "visitors": 50,
+                        "obs": "Espontânea (11h: 4) • Espontânea (15h: 9)",
+                        "done": true
+                  }
+            ]
+      },
+      {
+            "id": "hist_2026_06_11",
+            "thursdayDate": "2026-06-11",
+            "periodLabel": "11/06 a 14/06/2026",
+            "total": 302,
+            "reportSent": true,
+            "savedAt": "14/06/2026",
+            "days": [
+                  {
+                        "dayName": "Quinta-feira",
+                        "dateShort": "11/06",
+                        "visitors": 97,
+                        "obs": "Escola Municipal Rodrigues Alves (10h: 44) • Colégio PH Botafogo (14h: 33)",
+                        "done": true
+                  },
+                  {
+                        "dayName": "Sexta-feira",
+                        "dateShort": "12/06",
+                        "visitors": 64,
+                        "obs": "Escola OUR LADY OF MERCY (10h: 55)",
+                        "done": true
+                  },
+                  {
+                        "dayName": "Sábado",
+                        "dateShort": "13/06",
+                        "visitors": 60,
+                        "obs": "Espontânea (11h: 15)",
+                        "done": true
+                  },
+                  {
+                        "dayName": "Domingo",
+                        "dateShort": "14/06",
+                        "visitors": 81,
+                        "obs": "Espontânea (11h: 5) • Espontânea (15h: 12)",
+                        "done": true
+                  }
+            ]
+      },
+      {
+            "id": "hist_2026_06_04",
+            "thursdayDate": "2026-06-04",
+            "periodLabel": "04/06 a 07/06/2026",
+            "total": 236,
+            "reportSent": true,
+            "savedAt": "07/06/2026",
+            "days": [
+                  {
+                        "dayName": "Quinta-feira",
+                        "dateShort": "04/06",
+                        "visitors": 52,
+                        "obs": "Espontânea (11h: 6)",
+                        "done": true
+                  },
+                  {
+                        "dayName": "Sexta-feira",
+                        "dateShort": "05/06",
+                        "visitors": 49,
+                        "obs": "",
+                        "done": true
+                  },
+                  {
+                        "dayName": "Sábado",
+                        "dateShort": "06/06",
+                        "visitors": 42,
+                        "obs": "Espontânea (15h: 8)",
+                        "done": true
+                  },
+                  {
+                        "dayName": "Domingo",
+                        "dateShort": "07/06",
+                        "visitors": 93,
+                        "obs": "Grupo Igreja (10h: 20)",
+                        "done": true
+                  }
+            ]
+      },
+      {
+            "id": "hist_2026_05_28",
+            "thursdayDate": "2026-05-28",
+            "periodLabel": "28/05 a 31/05/2026",
+            "total": 308,
+            "reportSent": true,
+            "savedAt": "31/05/2026",
+            "days": [
+                  {
+                        "dayName": "Quinta-feira",
+                        "dateShort": "28/05",
+                        "visitors": 34,
+                        "obs": "",
+                        "done": true
+                  },
+                  {
+                        "dayName": "Sexta-feira",
+                        "dateShort": "29/05",
+                        "visitors": 115,
+                        "obs": "Escola CORCOVADO (10h30: 45) • Faculdade IBMR (13h: 22) • Alunos teologia PUC (15h: 25)",
+                        "done": true
+                  },
+                  {
+                        "dayName": "Sábado",
+                        "dateShort": "30/05",
+                        "visitors": 45,
+                        "obs": "Espontânea (15h: 7)",
+                        "done": true
+                  },
+                  {
+                        "dayName": "Domingo",
+                        "dateShort": "31/05",
+                        "visitors": 114,
+                        "obs": "Espontânea (11h: 40) • Espontânea (15h: 12)",
+                        "done": true
+                  }
+            ]
+      },
+      {
+            "id": "hist_2026_05_21",
+            "thursdayDate": "2026-05-21",
+            "periodLabel": "21/05 a 24/05/2026",
+            "total": 371,
+            "reportSent": true,
+            "savedAt": "24/05/2026",
+            "days": [
+                  {
+                        "dayName": "Quinta-feira",
+                        "dateShort": "21/05",
+                        "visitors": 153,
+                        "obs": "Escola Corcovado (10h30: 37) • Colégio ORT (13h: 54) • Colégio Nossa Senhora das Dores (15h: 58)",
+                        "done": true
+                  },
+                  {
+                        "dayName": "Sexta-feira",
+                        "dateShort": "22/05",
+                        "visitors": 11,
+                        "obs": "",
+                        "done": true
+                  },
+                  {
+                        "dayName": "Sábado",
+                        "dateShort": "23/05",
+                        "visitors": 65,
+                        "obs": "",
+                        "done": true
+                  },
+                  {
+                        "dayName": "Domingo",
+                        "dateShort": "24/05",
+                        "visitors": 142,
+                        "obs": "",
+                        "done": true
+                  }
+            ]
+      },
+      {
+            "id": "hist_2026_05_14",
+            "thursdayDate": "2026-05-14",
+            "periodLabel": "14/05 a 17/05/2026",
+            "total": 201,
+            "reportSent": true,
+            "savedAt": "17/05/2026",
+            "days": [
+                  {
+                        "dayName": "Quinta-feira",
+                        "dateShort": "14/05",
+                        "visitors": 36,
+                        "obs": "Casa Histórica de Deodoro (10h30: 21)",
+                        "done": true
+                  },
+                  {
+                        "dayName": "Sexta-feira",
+                        "dateShort": "15/05",
+                        "visitors": 59,
+                        "obs": "CYRELA (10h: 30)",
+                        "done": true
+                  },
+                  {
+                        "dayName": "Sábado",
+                        "dateShort": "16/05",
+                        "visitors": 49,
+                        "obs": "",
+                        "done": true
+                  },
+                  {
+                        "dayName": "Domingo",
+                        "dateShort": "17/05",
+                        "visitors": 57,
+                        "obs": "EVENTO",
+                        "done": true
+                  }
+            ]
+      },
+      {
+            "id": "hist_2026_05_07",
+            "thursdayDate": "2026-05-07",
+            "periodLabel": "07/05 a 10/05/2026",
+            "total": 182,
+            "reportSent": true,
+            "savedAt": "10/05/2026",
+            "days": [
+                  {
+                        "dayName": "Quinta-feira",
+                        "dateShort": "07/05",
+                        "visitors": 22,
+                        "obs": "",
+                        "done": true
+                  },
+                  {
+                        "dayName": "Sexta-feira",
+                        "dateShort": "08/05",
+                        "visitors": 78,
+                        "obs": "Escola Americana (10h: 56)",
+                        "done": true
+                  },
+                  {
+                        "dayName": "Sábado",
+                        "dateShort": "09/05",
+                        "visitors": 45,
+                        "obs": "Espontânea (11h: 10) • Espontânea (15h: 3)",
+                        "done": true
+                  },
+                  {
+                        "dayName": "Domingo",
+                        "dateShort": "10/05",
+                        "visitors": 37,
+                        "obs": "Espontânea (11h: 3)",
+                        "done": true
+                  }
+            ]
+      },
+      {
+            "id": "hist_2026_04_30",
+            "thursdayDate": "2026-04-30",
+            "periodLabel": "30/04 a 03/05/2026",
+            "total": 205,
+            "reportSent": true,
+            "savedAt": "03/05/2026",
+            "days": [
+                  {
+                        "dayName": "Quinta-feira",
+                        "dateShort": "30/04",
+                        "visitors": 35,
+                        "obs": "Faetec (10h: 7) • Museu de Imagens do Inconsciente (10h30: 3)",
+                        "done": true
+                  },
+                  {
+                        "dayName": "Sexta-feira",
+                        "dateShort": "01/05",
+                        "visitors": 55,
+                        "obs": "Espontânea (11h: 10) • Espontânea (15h: 5)",
+                        "done": true
+                  },
+                  {
+                        "dayName": "Sábado",
+                        "dateShort": "02/05",
+                        "visitors": 66,
+                        "obs": "Espontânea (11h: 5)",
+                        "done": true
+                  },
+                  {
+                        "dayName": "Domingo",
+                        "dateShort": "03/05",
+                        "visitors": 49,
+                        "obs": "Espontânea (11h: 5) • Espontânea (15h: 15)",
+                        "done": true
+                  }
+            ]
+      },
+      {
+            "id": "hist_2026_04_23",
+            "thursdayDate": "2026-04-23",
+            "periodLabel": "23/04 a 26/04/2026",
+            "total": 268,
+            "reportSent": true,
+            "savedAt": "26/04/2026",
+            "days": [
+                  {
+                        "dayName": "Quinta-feira",
+                        "dateShort": "23/04",
+                        "visitors": 82,
+                        "obs": "Espontânea (11h: 12) • Espontânea (15h: 8)",
+                        "done": true
+                  },
+                  {
+                        "dayName": "Sexta-feira",
+                        "dateShort": "24/04",
+                        "visitors": 40,
+                        "obs": "",
+                        "done": true
+                  },
+                  {
+                        "dayName": "Sábado",
+                        "dateShort": "25/04",
+                        "visitors": 59,
+                        "obs": "",
+                        "done": true
+                  },
+                  {
+                        "dayName": "Domingo",
+                        "dateShort": "26/04",
+                        "visitors": 87,
+                        "obs": "Espontânea (11h: 12) • Espontânea (15h: 3)",
+                        "done": true
+                  }
+            ]
+      },
+      {
+            "id": "hist_2026_04_16",
+            "thursdayDate": "2026-04-16",
+            "periodLabel": "16/04 a 19/04/2026",
+            "total": 240,
+            "reportSent": true,
+            "savedAt": "19/04/2026",
+            "days": [
+                  {
+                        "dayName": "Quinta-feira",
+                        "dateShort": "16/04",
+                        "visitors": 34,
+                        "obs": "",
+                        "done": true
+                  },
+                  {
+                        "dayName": "Sexta-feira",
+                        "dateShort": "17/04",
+                        "visitors": 0,
+                        "obs": "",
+                        "done": true
+                  },
+                  {
+                        "dayName": "Sábado",
+                        "dateShort": "18/04",
+                        "visitors": 127,
+                        "obs": "Betar e Chazit (13h30 e 15h30: 32)",
+                        "done": true
+                  },
+                  {
+                        "dayName": "Domingo",
+                        "dateShort": "19/04",
+                        "visitors": 79,
+                        "obs": "Espontânea (11h: 10) • Espontânea (15h: 14)",
+                        "done": true
+                  }
+            ]
+      },
+      {
+            "id": "hist_2026_04_09",
+            "thursdayDate": "2026-04-09",
+            "periodLabel": "09/04 a 12/04/2026",
+            "total": 314,
+            "reportSent": true,
+            "savedAt": "12/04/2026",
+            "days": [
+                  {
+                        "dayName": "Quinta-feira",
+                        "dateShort": "09/04",
+                        "visitors": 13,
+                        "obs": "",
+                        "done": true
+                  },
+                  {
+                        "dayName": "Sexta-feira",
+                        "dateShort": "10/04",
+                        "visitors": 102,
+                        "obs": "História Contemporânea da UNIRIO (11h: 10) • BMA Advogados (13h: 37) • Alunos Bat Mitsva ARI (16h30: 32)",
+                        "done": true
+                  },
+                  {
+                        "dayName": "Sábado",
+                        "dateShort": "11/04",
+                        "visitors": 58,
+                        "obs": "Espontânea (7)",
+                        "done": true
+                  },
+                  {
+                        "dayName": "Domingo",
+                        "dateShort": "12/04",
+                        "visitors": 141,
+                        "obs": "",
+                        "done": true
+                  }
+            ]
+      },
+      {
+            "id": "hist_2026_04_02",
+            "thursdayDate": "2026-04-02",
+            "periodLabel": "02/04 a 05/04/2026",
+            "total": 220,
+            "reportSent": true,
+            "savedAt": "05/04/2026",
+            "days": [
+                  {
+                        "dayName": "Quinta-feira",
+                        "dateShort": "02/04",
+                        "visitors": 45,
+                        "obs": "Colégio Pinheiro Guimarães (11h: 25)",
+                        "done": true
+                  },
+                  {
+                        "dayName": "Sexta-feira",
+                        "dateShort": "03/04",
+                        "visitors": 60,
+                        "obs": "",
+                        "done": true
+                  },
+                  {
+                        "dayName": "Sábado",
+                        "dateShort": "04/04",
+                        "visitors": 68,
+                        "obs": "Espontânea (15h: 11)",
+                        "done": true
+                  },
+                  {
+                        "dayName": "Domingo",
+                        "dateShort": "05/04",
+                        "visitors": 47,
+                        "obs": "Espontânea (11h: 4)",
+                        "done": true
+                  }
+            ]
+      },
+      {
+            "id": "hist_2026_03_26",
+            "thursdayDate": "2026-03-26",
+            "periodLabel": "26/03 a 29/03/2026",
+            "total": 190,
+            "reportSent": true,
+            "savedAt": "29/03/2026",
+            "days": [
+                  {
+                        "dayName": "Quinta-feira",
+                        "dateShort": "26/03",
+                        "visitors": 20,
+                        "obs": "",
+                        "done": true
+                  },
+                  {
+                        "dayName": "Sexta-feira",
+                        "dateShort": "27/03",
+                        "visitors": 21,
+                        "obs": "",
+                        "done": true
+                  },
+                  {
+                        "dayName": "Sábado",
+                        "dateShort": "28/03",
+                        "visitors": 87,
+                        "obs": "UERJ (10h30: 18) • Espontânea (15h: 10)",
+                        "done": true
+                  },
+                  {
+                        "dayName": "Domingo",
+                        "dateShort": "29/03",
+                        "visitors": 62,
+                        "obs": "",
+                        "done": true
+                  }
+            ]
+      },
+      {
+            "id": "hist_2026_03_19",
+            "thursdayDate": "2026-03-19",
+            "periodLabel": "19/03 a 22/03/2026",
+            "total": 270,
+            "reportSent": true,
+            "savedAt": "22/03/2026",
+            "days": [
+                  {
+                        "dayName": "Quinta-feira",
+                        "dateShort": "19/03",
+                        "visitors": 67,
+                        "obs": "Colégio Pinheiro Guimarães (10h: 45)",
+                        "done": true
+                  },
+                  {
+                        "dayName": "Sexta-feira",
+                        "dateShort": "20/03",
+                        "visitors": 40,
+                        "obs": "",
+                        "done": true
+                  },
+                  {
+                        "dayName": "Sábado",
+                        "dateShort": "21/03",
+                        "visitors": 115,
+                        "obs": "Chazit (14h30: 15) • Escola Eliezer Max (16h: 31)",
+                        "done": true
+                  },
+                  {
+                        "dayName": "Domingo",
+                        "dateShort": "22/03",
+                        "visitors": 48,
+                        "obs": "",
+                        "done": true
+                  }
+            ]
+      },
+      {
+            "id": "hist_2026_03_12",
+            "thursdayDate": "2026-03-12",
+            "periodLabel": "12/03 a 15/03/2026",
+            "total": 197,
+            "reportSent": true,
+            "savedAt": "15/03/2026",
+            "days": [
+                  {
+                        "dayName": "Quinta-feira",
+                        "dateShort": "12/03",
+                        "visitors": 27,
+                        "obs": "",
+                        "done": true
+                  },
+                  {
+                        "dayName": "Sexta-feira",
+                        "dateShort": "13/03",
+                        "visitors": 21,
+                        "obs": "",
+                        "done": true
+                  },
+                  {
+                        "dayName": "Sábado",
+                        "dateShort": "14/03",
+                        "visitors": 64,
+                        "obs": "",
+                        "done": true
+                  },
+                  {
+                        "dayName": "Domingo",
+                        "dateShort": "15/03",
+                        "visitors": 85,
+                        "obs": "",
+                        "done": true
+                  }
+            ]
+      },
+      {
+            "id": "hist_2026_03_05",
+            "thursdayDate": "2026-03-05",
+            "periodLabel": "05/03 a 08/03/2026",
+            "total": 222,
+            "reportSent": true,
+            "savedAt": "08/03/2026",
+            "days": [
+                  {
+                        "dayName": "Quinta-feira",
+                        "dateShort": "05/03",
+                        "visitors": 0,
+                        "obs": "Fechado (Reabertura em 08/03)",
+                        "done": true
+                  },
+                  {
+                        "dayName": "Sexta-feira",
+                        "dateShort": "06/03",
+                        "visitors": 0,
+                        "obs": "Fechado (Reabertura em 08/03)",
+                        "done": true
+                  },
+                  {
+                        "dayName": "Sábado",
+                        "dateShort": "07/03",
+                        "visitors": 0,
+                        "obs": "Fechado (Reabertura em 08/03)",
+                        "done": true
+                  },
+                  {
+                        "dayName": "Domingo",
+                        "dateShort": "08/03",
+                        "visitors": 222,
+                        "obs": "Reabertura do Memorial",
+                        "done": true
+                  }
+            ]
       }
-    ];
+];
 
     function parseLocalDate(isoStr) {
       const [y, m, d] = isoStr.split('-').map(Number);
@@ -697,7 +2232,7 @@
     }
 
     function getThursdayOfWeek(dateObj) {
-      const dayOfWeek = dateObj.getDay(); // 0=Dom, 1=Seg, 2=Ter, 3=Qua, 4=Qui, 5=Sex, 6=Sab
+      const dayOfWeek = dateObj.getDay();
       const diffToThursday = dayOfWeek === 0 ? -3 : (4 - dayOfWeek);
       return addDays(dateObj, diffToThursday);
     }
@@ -716,7 +2251,24 @@
       };
     }
 
+    const INITIAL_CURRENT_2026_11_19 = {
+      thursdayDate: '2026-11-19',
+      reportSent: false,
+      lastUpdatedBy: 'Planilha 2026',
+      lastUpdatedAt: '20/11 às 11:00',
+      sporadicDays: createDefaultSporadicDays(),
+      days: [
+        { visitors: 67, obs: 'CIEP MAESTRO FRANCISCO MIGNONE (10h: 46)', done: true },
+        { visitors: 0, obs: 'Feriado', done: true },
+        { visitors: 0, obs: '', done: false },
+        { visitors: 0, obs: '', done: false }
+      ]
+    };
+
     function createDefaultCurrentState(thursdayStr = getTrueCurrentThursdayISO()) {
+      if (thursdayStr === '2026-11-19') {
+        return JSON.parse(JSON.stringify(INITIAL_CURRENT_2026_11_19));
+      }
       return {
         thursdayDate: thursdayStr,
         reportSent: false,
@@ -736,6 +2288,7 @@
     let teamUsers = [];
     let currentState = createDefaultCurrentState();
     let historyState = [];
+    let trendChartInstance = null;
 
     function getCurrentBrasiliaTimestamp() {
       const now = new Date();
@@ -839,6 +2392,54 @@
       return Boolean(currentUserProfile.canEdit);
     }
 
+    // ================= MODO OFFLINE INTELIGENTE COM FILA =================
+    function setOfflinePendingFlag(isPending) {
+      if (isPending) {
+        localStorage.setItem(STORAGE_KEY_OFFLINE_DIRTY, '1');
+      } else {
+        localStorage.removeItem(STORAGE_KEY_OFFLINE_DIRTY);
+      }
+      updateOfflineBannerUI();
+    }
+
+    function hasOfflinePendingChanges() {
+      return localStorage.getItem(STORAGE_KEY_OFFLINE_DIRTY) === '1';
+    }
+
+    function updateOfflineBannerUI() {
+      const banner = document.getElementById('offlinePendingBanner');
+      if (!banner) return;
+      if (isFirebaseConfigured && hasOfflinePendingChanges()) {
+        banner.classList.remove('hidden');
+      } else {
+        banner.classList.add('hidden');
+      }
+    }
+
+    async function flushOfflineQueueIfNeeded() {
+      if (!isFirebaseConfigured || !fbDb || !isFirebaseConnected) return;
+      if (!hasOfflinePendingChanges()) return;
+
+      try {
+        const localCurRaw = localStorage.getItem(STORAGE_KEY_CURRENT);
+        if (localCurRaw) {
+          const parsedCur = JSON.parse(localCurRaw);
+          await set(ref(fbDb, 'memorial/currentWeek'), parsedCur);
+        }
+        const localHistRaw = localStorage.getItem(STORAGE_KEY_HISTORY);
+        if (localHistRaw) {
+          const parsedHist = JSON.parse(localHistRaw);
+          if (Array.isArray(parsedHist)) {
+            await set(ref(fbDb, 'memorial/history'), parsedHist);
+          }
+        }
+        setOfflinePendingFlag(false);
+        showToast('Dados offline sincronizados com o Firebase!');
+      } catch (err) {
+        console.warn('Falha ao descarregar fila offline:', err);
+      }
+    }
+
     function loadDemoStorage() {
       try {
         const rawUsers = localStorage.getItem(STORAGE_KEY_USERS);
@@ -867,18 +2468,37 @@
         currentState.lastUpdatedAt = getCurrentBrasiliaTimestamp();
       }
 
+      // Sempre salva cópia espelho local imediata para segurança offline
+      localStorage.setItem(STORAGE_KEY_CURRENT, JSON.stringify(currentState));
+
       if (isFirebaseConfigured && fbDb) {
-        await set(ref(fbDb, 'memorial/currentWeek'), currentState);
-      } else {
-        localStorage.setItem(STORAGE_KEY_CURRENT, JSON.stringify(currentState));
+        if (!navigator.onLine || !isFirebaseConnected) {
+          setOfflinePendingFlag(true);
+          return;
+        }
+        try {
+          await set(ref(fbDb, 'memorial/currentWeek'), currentState);
+          setOfflinePendingFlag(false);
+        } catch (err) {
+          setOfflinePendingFlag(true);
+        }
       }
     }
 
     async function persistHistoryList() {
+      localStorage.setItem(STORAGE_KEY_HISTORY, JSON.stringify(historyState));
+
       if (isFirebaseConfigured && fbDb) {
-        await set(ref(fbDb, 'memorial/history'), historyState);
-      } else {
-        localStorage.setItem(STORAGE_KEY_HISTORY, JSON.stringify(historyState));
+        if (!navigator.onLine || !isFirebaseConnected) {
+          setOfflinePendingFlag(true);
+          return;
+        }
+        try {
+          await set(ref(fbDb, 'memorial/history'), historyState);
+          setOfflinePendingFlag(false);
+        } catch (err) {
+          setOfflinePendingFlag(true);
+        }
       }
     }
 
@@ -965,16 +2585,19 @@
         syncModeText.textContent = 'Firebase Online';
         syncStatusDot.classList.remove('hidden');
 
-        onValue(ref(fbDb, '.info/connected'), (snap) => {
-          if (snap.val() === true) {
+        onValue(ref(fbDb, '.info/connected'), async (snap) => {
+          isFirebaseConnected = snap.val() === true;
+          if (isFirebaseConnected) {
             syncModeText.textContent = 'Firebase Online';
             syncModeText.className = 'text-emerald-300 font-medium';
             syncStatusDot.className = 'w-2 h-2 rounded-full bg-emerald-400 animate-pulse shrink-0';
+            await flushOfflineQueueIfNeeded();
           } else {
-            syncModeText.textContent = 'Reconectando...';
+            syncModeText.textContent = 'Offline (Local)';
             syncModeText.className = 'text-amber-300 font-medium';
-            syncStatusDot.className = 'w-2 h-2 rounded-full bg-amber-400 animate-pulse shrink-0';
+            syncStatusDot.className = 'w-2 h-2 rounded-full bg-amber-400 shrink-0';
           }
+          updateOfflineBannerUI();
         });
       } else {
         syncModeText.textContent = 'Modo Local';
@@ -1006,15 +2629,20 @@
         });
 
         onValue(ref(fbDb, 'memorial/currentWeek'), (snap) => {
+          // Se há alterações offline pendentes no aparelho, mantém a cópia local até sincronizar
+          if (hasOfflinePendingChanges()) return;
+
           const val = snap.val();
           if (val && Array.isArray(val.days)) {
             currentState = val;
             if (!currentState.sporadicDays) {
               currentState.sporadicDays = createDefaultSporadicDays();
             }
+            localStorage.setItem(STORAGE_KEY_CURRENT, JSON.stringify(currentState));
           }
           applyPermissionsUI();
 
+          // Protege o campo em foco para não fechar o teclado do Android enquanto digita
           const activeEl = document.activeElement;
           const isTypingInDays = activeEl &&
             activeEl.closest('#daysContainer') &&
@@ -1025,9 +2653,21 @@
           }
           updateSummaryAndPreview();
         });
+
         onValue(ref(fbDb, 'memorial/history'), (snap) => {
+          if (hasOfflinePendingChanges()) return;
           const val = snap.val();
-          historyState = Array.isArray(val) ? val : INITIAL_HISTORY;
+          if (Array.isArray(val) && val.length >= INITIAL_HISTORY.length) {
+            historyState = val;
+          } else {
+            const mergedMap = new Map();
+            INITIAL_HISTORY.forEach(w => mergedMap.set(w.thursdayDate, w));
+            if (Array.isArray(val)) {
+              val.forEach(w => { if (w && w.thursdayDate) mergedMap.set(w.thursdayDate, w); });
+            }
+            historyState = Array.from(mergedMap.values()).sort((a, b) => b.thursdayDate.localeCompare(a.thursdayDate));
+          }
+          localStorage.setItem(STORAGE_KEY_HISTORY, JSON.stringify(historyState));
           renderHistory();
           updateSummaryAndPreview();
         });
@@ -1039,6 +2679,8 @@
         updateSummaryAndPreview();
         renderHistory();
       }
+
+      setupSundayReminderUI();
     }
 
     function applyPermissionsUI() {
@@ -1128,7 +2770,9 @@
                     </span>
                   ` : ''}
                 </div>
-                <p class="text-xs text-slate-400 mt-0.5">${escapeHtml(member.roleTitle || 'Equipe Memorial')} • ${escapeHtml(member.email)}</p>
+                <p class="text-xs text-slate-400 mt-0.5">
+                  ${escapeHtml(member.roleTitle || 'Equipe Memorial')} • <span class="text-slate-300">${escapeHtml(member.email)}</span>
+                </p>
               </div>
             </div>
 
@@ -1136,7 +2780,7 @@
               ${(!isFounderMember || isSelf) ? `
                 <button type="button" data-team-action="edit" data-uid="${member.uid}"
                   class="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold border border-slate-700 transition">
-                  Editar Nome/Função
+                  Editar Dados
                 </button>
               ` : ''}
 
@@ -1161,7 +2805,7 @@
               ${(!isFounderMember || isSelf) ? `
                 <button type="button" data-team-action="reset-pass" data-uid="${member.uid}"
                   class="px-3 py-1.5 rounded-lg bg-amber-500/15 hover:bg-amber-500/25 text-amber-300 text-xs font-semibold border border-amber-500/30 transition">
-                  Resetar Senha
+                  Resetar Senha (E-mail)
                 </button>
               ` : ''}
 
@@ -1229,6 +2873,24 @@
           ? `data-entry-type="sporadic" data-key="${entry.key}"`
           : `data-entry-type="regular" data-idx="${entry.idx}"`;
 
+        const quickChipsHtml = editable ? `
+          <div class="flex items-center gap-1.5 flex-wrap pt-2">
+            ${QUICK_OBS_TAGS.map(tag => {
+              const isSelected = (entry.obs || '').includes(tag);
+              return `
+                <button type="button" data-action="quick-tag" data-tag="${escapeHtml(tag)}" ${dataTargetAttrs}
+                  class="text-[11px] font-medium px-2.5 py-1 rounded-full border transition active:scale-95 ${
+                    isSelected
+                      ? 'bg-sky-500/20 text-sky-300 border-sky-500/40'
+                      : 'bg-slate-850 hover:bg-slate-800 text-slate-400 hover:text-slate-200 border-slate-800'
+                  }">
+                  + ${escapeHtml(tag)}
+                </button>
+              `;
+            }).join('')}
+          </div>
+        ` : '';
+
         const card = document.createElement('div');
         card.className = `rounded-2xl border p-4 transition-all ${
           isDone
@@ -1294,6 +2956,7 @@
               value="${escapeHtml(entry.obs || '')}"
               placeholder="Observação opcional (ex.: 1 visita escolar remarcada)"
               class="w-full bg-slate-850/90 border border-slate-800 focus:border-sky-400 rounded-xl px-3.5 py-2.5 text-xs sm:text-sm text-slate-200 placeholder-slate-500 focus:outline-none transition disabled:opacity-60" />
+            ${quickChipsHtml}
           </div>
         `;
 
@@ -1430,7 +3093,253 @@
       showToast(`Semana ${period} salva no histórico!`);
     }
 
+    // ================= DASHBOARD ANUAL & GRÁFICO COMPARATIVO =================
+    function getAllConsolidatedWeeks() {
+      const entries = getOrderedWeekEntries();
+      const currentTotal = entries.reduce((sum, d) => sum + (Number(d.visitors) || 0), 0);
+      const currentEntry = {
+        id: `cur_${currentState.thursdayDate}`,
+        thursdayDate: currentState.thursdayDate,
+        periodLabel: getActivePeriodString(),
+        total: currentTotal,
+        reportSent: Boolean(currentState.reportSent),
+        savedAt: currentState.lastUpdatedAt || 'Semana Atual',
+        days: entries.map((d) => ({
+          dayName: d.dayName,
+          dateShort: formatDDMM(d.dateObj),
+          visitors: Number(d.visitors) || 0,
+          obs: (d.obs || '').trim(),
+          done: Boolean(d.done),
+          isSporadic: d.type === 'sporadic'
+        }))
+      };
+
+      const combined = [...(historyState || [])];
+      const existingIdx = combined.findIndex(w => w.thursdayDate === currentState.thursdayDate);
+      if (existingIdx >= 0) {
+        combined[existingIdx] = currentEntry;
+      } else if (currentTotal > 0 || entries.some(d => d.done)) {
+        combined.push(currentEntry);
+      }
+      return combined.sort((a, b) => (a.thursdayDate || '').localeCompare(b.thursdayDate || ''));
+    }
+
+    function renderAnnualDashboard() {
+      const allWeeks = getAllConsolidatedWeeks();
+      const yearSelect = document.getElementById('dashYearSelect');
+      const yearLabel = document.getElementById('dashYearLabel');
+
+      const yearsSet = new Set([String(new Date().getFullYear())]);
+      allWeeks.forEach(w => {
+        if (w.thursdayDate && w.thursdayDate.length >= 4) {
+          yearsSet.add(w.thursdayDate.slice(0, 4));
+        }
+      });
+
+      const sortedYears = Array.from(yearsSet).sort((a, b) => b.localeCompare(a));
+      const selectedYear = yearSelect.value && yearsSet.has(yearSelect.value)
+        ? yearSelect.value
+        : sortedYears[0];
+
+      yearSelect.innerHTML = sortedYears
+        .map(y => `<option value="${y}" ${y === selectedYear ? 'selected' : ''}>${y}</option>`)
+        .join('');
+      if (yearLabel) yearLabel.textContent = selectedYear;
+
+      const yearWeeks = allWeeks.filter(w => (w.thursdayDate || '').startsWith(selectedYear));
+
+      const yearTotal = yearWeeks.reduce((acc, w) => acc + (Number(w.total) || 0), 0);
+      const weekAvg = yearWeeks.length ? Math.round(yearTotal / yearWeeks.length) : 0;
+      const bestWeek = yearWeeks.reduce((max, w) => Math.max(max, Number(w.total) || 0), 0);
+
+      document.getElementById('kpiYearTotal').textContent = yearTotal.toLocaleString('pt-BR');
+      document.getElementById('kpiWeekAvg').textContent = weekAvg.toLocaleString('pt-BR');
+      document.getElementById('kpiBestWeek').textContent = bestWeek.toLocaleString('pt-BR');
+
+      // Últimas 10 semanas do ano selecionado para o gráfico de barras
+      const chartWeeks = yearWeeks.slice(-10);
+      const labels = chartWeeks.map(w => (w.periodLabel || '').replace(/\/\d{4}$/, ''));
+      const values = chartWeeks.map(w => Number(w.total) || 0);
+
+      const canvas = document.getElementById('visitorsTrendChart');
+      if (!canvas || typeof Chart === 'undefined') return;
+
+      if (trendChartInstance) {
+        trendChartInstance.destroy();
+      }
+
+      trendChartInstance = new Chart(canvas.getContext('2d'), {
+        type: 'bar',
+        data: {
+          labels: labels.length ? labels : ['Sem dados'],
+          datasets: [{
+            label: 'Visitantes',
+            data: values.length ? values : [0],
+            backgroundColor: 'rgba(245, 158, 11, 0.78)',
+            borderColor: '#fbbf24',
+            borderWidth: 1.5,
+            borderRadius: 6,
+            maxBarThickness: 34
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { display: false },
+            tooltip: {
+              backgroundColor: '#0f172a',
+              titleColor: '#fbbf24',
+              bodyColor: '#f8fafc',
+              borderColor: '#334155',
+              borderWidth: 1,
+              callbacks: {
+                label: (ctx) => ` ${ctx.parsed.y} visitantes`
+              }
+            }
+          },
+          scales: {
+            x: {
+              grid: { display: false },
+              ticks: { color: '#94a3b8', font: { size: 10, weight: '600' } }
+            },
+            y: {
+              beginAtZero: true,
+              grid: { color: 'rgba(51, 65, 85, 0.4)' },
+              ticks: { color: '#94a3b8', font: { size: 10 } }
+            }
+          }
+        }
+      });
+    }
+
+    // ================= EXPORTAÇÃO OFICIAL EXCEL (.XLSX) & PDF =================
+    function exportOfficialExcel() {
+      if (typeof XLSX === 'undefined') {
+        showToast('Biblioteca Excel ainda carregando, tente novamente.');
+        return;
+      }
+
+      const selectedYear = document.getElementById('dashYearSelect')?.value || String(new Date().getFullYear());
+      const allWeeks = getAllConsolidatedWeeks().filter(w => (w.thursdayDate || '').startsWith(selectedYear));
+
+      if (!allWeeks.length) {
+        showToast('Nenhum registro encontrado para exportar.');
+        return;
+      }
+
+      const rows = [];
+      allWeeks.forEach(w => {
+        (w.days || []).forEach(d => {
+          rows.push({
+            'Período Semanal': w.periodLabel,
+            'Dia da Semana': d.dayName,
+            'Data': `${d.dateShort}/${selectedYear}`,
+            'Visitantes': Number(d.visitors) || 0,
+            'Tipo': d.isSporadic ? 'Esporádico' : 'Grade Regular',
+            'Observação': d.obs || '',
+            'Relatório Enviado': w.reportSent ? 'Sim' : 'Pendente'
+          });
+        });
+      });
+
+      const summaryRows = allWeeks.map(w => ({
+        'Período Semanal': w.periodLabel,
+        'Total de Visitantes': Number(w.total) || 0,
+        'Status Diretoria': w.reportSent ? 'Enviado' : 'Pendente',
+        'Registro': w.savedAt || ''
+      }));
+
+      const wb = XLSX.utils.book_new();
+      const wsSummary = XLSX.utils.json_to_sheet(summaryRows);
+      const wsDetails = XLSX.utils.json_to_sheet(rows);
+
+      XLSX.utils.book_append_sheet(wb, wsSummary, 'Resumo Semanal');
+      XLSX.utils.book_append_sheet(wb, wsDetails, 'Detalhamento Diário');
+
+      XLSX.writeFile(wb, `Memorial_Visitacao_${selectedYear}.xlsx`);
+      showToast(`Planilha Memorial_Visitacao_${selectedYear}.xlsx baixada!`);
+    }
+
+    function exportOfficialPdf() {
+      const selectedYear = document.getElementById('dashYearSelect')?.value || String(new Date().getFullYear());
+      const allWeeks = getAllConsolidatedWeeks().filter(w => (w.thursdayDate || '').startsWith(selectedYear));
+
+      if (!allWeeks.length) {
+        showToast('Nenhum registro encontrado para gerar PDF.');
+        return;
+      }
+
+      const totalYear = allWeeks.reduce((acc, w) => acc + (Number(w.total) || 0), 0);
+      const avgWeek = Math.round(totalYear / allWeeks.length);
+      const printContainer = document.getElementById('printReportContainer');
+
+      const weeksTableRows = allWeeks.map(w => {
+        const obsSummary = (w.days || [])
+          .filter(d => d.obs && d.obs.trim())
+          .map(d => `${d.dayName.split('-')[0]} (${d.dateShort}): ${escapeHtml(d.obs)}`)
+          .join(' | ');
+
+        return `
+          <tr style="border-bottom: 1px solid #cbd5e1;">
+            <td style="padding: 8px; font-weight: 600;">${escapeHtml(w.periodLabel)}</td>
+            <td style="padding: 8px; text-align: center; font-weight: 700;">${w.total}</td>
+            <td style="padding: 8px; font-size: 11px; color: #334155;">${obsSummary || '—'}</td>
+            <td style="padding: 8px; text-align: center; font-size: 11px;">${w.reportSent ? 'Enviado' : 'Pendente'}</td>
+          </tr>
+        `;
+      }).join('');
+
+      printContainer.innerHTML = `
+        <div style="font-family: Inter, Arial, sans-serif; color: #0f172a; max-width: 800px; margin: 0 auto;">
+          <div style="border-bottom: 3px solid #facc15; padding-bottom: 12px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center;">
+            <div>
+              <h1 style="font-size: 18px; font-weight: 800; margin: 0;">MEMORIAL ÀS VÍTIMAS DO HOLOCAUSTO</h1>
+              <p style="font-size: 12px; color: #475569; margin: 4px 0 0 0;">Relatório Consolidado de Visitação — Exercício ${selectedYear}</p>
+            </div>
+            <div style="text-align: right; font-size: 11px; color: #475569;">
+              <div>Emitido em: ${formatDDMMYYYY(new Date())}</div>
+              <div>Responsável: ${escapeHtml(currentUserProfile?.name || 'Administração')}</div>
+            </div>
+          </div>
+
+          <div style="display: flex; gap: 16px; margin-bottom: 20px;">
+            <div style="flex: 1; border: 1px solid #cbd5e1; border-radius: 8px; padding: 12px;">
+              <div style="font-size: 10px; text-transform: uppercase; color: #64748b; font-weight: 700;">Total Acumulado (${selectedYear})</div>
+              <div style="font-size: 22px; font-weight: 800; margin-top: 4px;">${totalYear.toLocaleString('pt-BR')} visitantes</div>
+            </div>
+            <div style="flex: 1; border: 1px solid #cbd5e1; border-radius: 8px; padding: 12px;">
+              <div style="font-size: 10px; text-transform: uppercase; color: #64748b; font-weight: 700;">Semanas Registradas</div>
+              <div style="font-size: 22px; font-weight: 800; margin-top: 4px;">${allWeeks.length} semanas</div>
+            </div>
+            <div style="flex: 1; border: 1px solid #cbd5e1; border-radius: 8px; padding: 12px;">
+              <div style="font-size: 10px; text-transform: uppercase; color: #64748b; font-weight: 700;">Média por Semana</div>
+              <div style="font-size: 22px; font-weight: 800; margin-top: 4px;">~${avgWeek.toLocaleString('pt-BR')} vis.</div>
+            </div>
+          </div>
+
+          <table style="width: 100%; border-collapse: collapse; font-size: 12px;">
+            <thead>
+              <tr style="background: #f1f5f9; border-bottom: 2px solid #94a3b8; text-align: left;">
+                <th style="padding: 8px;">Período</th>
+                <th style="padding: 8px; text-align: center;">Visitantes</th>
+                <th style="padding: 8px;">Observações / Ocorrências</th>
+                <th style="padding: 8px; text-align: center;">Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${weeksTableRows}
+            </tbody>
+          </table>
+        </div>
+      `;
+
+      window.print();
+    }
+
     function renderHistory() {
+      renderAnnualDashboard();
+
       const container = document.getElementById('historyListContainer');
       const editable = userCanEdit();
 
@@ -1524,27 +3433,7 @@
       const month = sundayDate.getMonth() + 1;
       const targetPrefix = `${year}-${String(month).padStart(2, '0')}`;
 
-      const entries = getOrderedWeekEntries();
-      const currentTotal = entries.reduce((sum, d) => sum + (Number(d.visitors) || 0), 0);
-      const currentEntry = {
-        thursdayDate: currentState.thursdayDate,
-        periodLabel: getActivePeriodString(),
-        total: currentTotal,
-        days: entries.map((d) => ({
-          dayName: d.dayName,
-          dateShort: formatDDMM(d.dateObj),
-          visitors: Number(d.visitors) || 0,
-          obs: (d.obs || '').trim()
-        }))
-      };
-
-      const combinedWeeks = [...(historyState || [])];
-      const existingIdx = combinedWeeks.findIndex(w => w.thursdayDate === currentState.thursdayDate);
-      if (existingIdx >= 0) {
-        combinedWeeks[existingIdx] = currentEntry;
-      } else if (currentTotal > 0 || entries.some(d => d.done)) {
-        combinedWeeks.push(currentEntry);
-      }
+      const combinedWeeks = getAllConsolidatedWeeks();
 
       const monthWeeks = combinedWeeks.filter(item => {
         if (!item.thursdayDate) return false;
@@ -1653,6 +3542,79 @@
         sporadicDays: spRestored,
         days: regularRestored
       };
+    }
+
+    // ================= LEMBRETE DE FECHAMENTO AOS DOMINGOS 17H =================
+    const SUNDAY_REMINDER_ID = 7017;
+
+    function getNextSunday17h() {
+      const now = new Date();
+      const target = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 17, 0, 0, 0);
+      const day = now.getDay(); // 0 = Domingo
+      const daysUntilSunday = day === 0 ? (now >= target ? 7 : 0) : (7 - day);
+      target.setDate(target.getDate() + daysUntilSunday);
+      return target;
+    }
+
+    async function scheduleSundayClosingReminder() {
+      const cap = window.Capacitor;
+      if (!cap || !cap.Plugins || !cap.Plugins.LocalNotifications) return false;
+
+      try {
+        const perm = await cap.Plugins.LocalNotifications.requestPermissions();
+        if (perm.display !== 'granted') return false;
+
+        await cap.Plugins.LocalNotifications.cancel({ notifications: [{ id: SUNDAY_REMINDER_ID }] });
+
+        if (currentState.reportSent) return true;
+
+        await cap.Plugins.LocalNotifications.schedule({
+          notifications: [{
+            id: SUNDAY_REMINDER_ID,
+            title: 'Memorial às Vítimas do Holocausto',
+            body: 'Fechamento semanal: lembre-se de enviar o balanço de visitação para a Diretoria!',
+            schedule: { at: getNextSunday17h(), repeats: true, every: 'week' }
+          }]
+        });
+        return true;
+      } catch (err) {
+        console.warn('Não foi possível agendar notificação local:', err);
+        return false;
+      }
+    }
+
+    async function cancelSundayClosingReminder() {
+      const cap = window.Capacitor;
+      if (!cap || !cap.Plugins || !cap.Plugins.LocalNotifications) return;
+      try {
+        await cap.Plugins.LocalNotifications.cancel({ notifications: [{ id: SUNDAY_REMINDER_ID }] });
+      } catch (err) {
+        console.warn(err);
+      }
+    }
+
+    function setupSundayReminderUI() {
+      const box = document.getElementById('sundayReminderBox');
+      const btn = document.getElementById('btnToggleSundayReminder');
+      const status = document.getElementById('sundayReminderStatus');
+      const cap = window.Capacitor;
+
+      // Exibe no APK Android quando o plugin LocalNotifications estiver disponível
+      if (!box || !cap || !cap.isNativePlatform || !cap.isNativePlatform()) return;
+
+      box.classList.remove('hidden');
+      const enabled = localStorage.getItem(STORAGE_KEY_SUNDAY_REMINDER) === '1';
+
+      if (enabled) {
+        btn.textContent = 'Alerta Ativo';
+        btn.className = 'px-3 py-1.5 rounded-lg bg-emerald-500/20 text-emerald-300 border border-emerald-500/35 text-xs font-bold transition shrink-0';
+        status.textContent = 'Notificação agendada para domingos às 17h';
+        scheduleSundayClosingReminder();
+      } else {
+        btn.textContent = 'Ativar Alerta';
+        btn.className = 'px-3 py-1.5 rounded-lg bg-sky-500/15 hover:bg-sky-500/25 text-sky-300 border border-sky-500/30 text-xs font-bold transition shrink-0';
+        status.textContent = 'Alerta local no celular se o envio estiver pendente';
+      }
     }
 
     // ================= ATUALIZADOR IN-APP DO APK =================
@@ -1789,6 +3751,36 @@
         document.getElementById('apkUpdateModal').classList.add('hidden');
       });
 
+      document.getElementById('btnForceSyncOffline')?.addEventListener('click', async () => {
+        await flushOfflineQueueIfNeeded();
+        if (hasOfflinePendingChanges()) {
+          showToast('Ainda sem conexão com o Firebase. Os dados continuam salvos no aparelho.');
+        }
+      });
+
+      window.addEventListener('online', () => {
+        flushOfflineQueueIfNeeded();
+      });
+
+      document.getElementById('btnToggleSundayReminder')?.addEventListener('click', async () => {
+        const currentlyEnabled = localStorage.getItem(STORAGE_KEY_SUNDAY_REMINDER) === '1';
+        if (currentlyEnabled) {
+          localStorage.removeItem(STORAGE_KEY_SUNDAY_REMINDER);
+          await cancelSundayClosingReminder();
+          setupSundayReminderUI();
+          showToast('Lembrete de domingo desativado.');
+        } else {
+          const ok = await scheduleSundayClosingReminder();
+          if (ok) {
+            localStorage.setItem(STORAGE_KEY_SUNDAY_REMINDER, '1');
+            setupSundayReminderUI();
+            showToast('Lembrete agendado para domingos às 17h!');
+          } else {
+            showToast('Permissão de notificação necessária no Android.');
+          }
+        }
+      });
+
       document.getElementById('btnShowLoginTab').addEventListener('click', showLoginSubTab);
       document.getElementById('btnShowRegisterTab').addEventListener('click', showRegisterSubTab);
 
@@ -1807,8 +3799,9 @@
               showToast('Conta sem perfil ativo na equipe.');
               return;
             }
+            localStorage.setItem(STORAGE_KEY_LAST_EMAIL, email);
             onAuthenticatedSuccess(profile);
-            showToast(`Bem-vindo(a), ${profile.name} (${profile.role === 'admin' ? 'Admin' : 'User'})!`);
+            showToast(`Bem-vindo(a), ${profile.name}!`);
           } catch (err) {
             showToast('E-mail ou senha inválidos.');
           }
@@ -1822,8 +3815,9 @@
             return;
           }
           localStorage.setItem(STORAGE_KEY_SESSION, found.uid);
+          localStorage.setItem(STORAGE_KEY_LAST_EMAIL, email);
           onAuthenticatedSuccess(found);
-          showToast(`Bem-vindo(a), ${found.name} (${found.role === 'admin' ? 'Admin' : 'User'})!`);
+          showToast(`Bem-vindo(a), ${found.name}!`);
         }
       });
 
@@ -1838,6 +3832,11 @@
         const roleTitle = document.getElementById('regRoleTitle').value.trim();
         const email = document.getElementById('regEmail').value.trim().toLowerCase();
         const password = document.getElementById('regPassword').value;
+
+        if (teamUsers.some(u => (u.email || '').toLowerCase() === email)) {
+          showToast('Este e-mail já está cadastrado na equipe.');
+          return;
+        }
 
         const isFirstAccount = teamUsers.length === 0;
         const assignedRole = isFirstAccount ? 'admin' : 'user';
@@ -1856,16 +3855,13 @@
               createdAt: formatDDMMYYYY(new Date())
             };
             await set(ref(fbDb, `memorial/users/${cred.user.uid}`), profile);
+            localStorage.setItem(STORAGE_KEY_LAST_EMAIL, email);
             onAuthenticatedSuccess(profile);
-            showToast(`Conta ${assignedRole.toUpperCase()} criada com sucesso!`);
+            showToast('Conta criada com sucesso!');
           } catch (err) {
-            showToast('Não foi possível criar a conta (verifique o e-mail/senha).');
+            showToast('Não foi possível criar a conta (e-mail já em uso ou senha fraca).');
           }
         } else {
-          if (teamUsers.some(u => u.email.toLowerCase() === email)) {
-            showToast('Este e-mail já está cadastrado.');
-            return;
-          }
           const newProfile = {
             uid: `user_${Date.now()}`,
             name,
@@ -1880,8 +3876,9 @@
           teamUsers.push(newProfile);
           persistDemoUsers();
           localStorage.setItem(STORAGE_KEY_SESSION, newProfile.uid);
+          localStorage.setItem(STORAGE_KEY_LAST_EMAIL, email);
           onAuthenticatedSuccess(newProfile);
-          showToast(`Cadastro concluído como ${assignedRole.toUpperCase()} (${teamUsers.length}/${MAX_TEAM_ACCOUNTS})!`);
+          showToast('Cadastro concluído!');
         }
       });
 
@@ -1996,10 +3993,9 @@
           }
         }
         document.getElementById('editMemberModal').classList.add('hidden');
-        showToast('Dados do integrante atualizados!');
+        showToast('Dados atualizados!');
       });
 
-      // Calcula automaticamente a Quinta-feira da semana operacional (Seg a Dom) de qualquer data escolhida no calendário
       document.getElementById('thursdayDateInput').addEventListener('change', async (e) => {
         if (!e.target.value || !userCanEdit()) return;
         const pickedDate = parseLocalDate(e.target.value);
@@ -2012,7 +4008,6 @@
         updateSummaryAndPreview();
       });
 
-      // Controle exclusivo Admin dos dias esporádicos (Seg / Ter / Qua)
       document.getElementById('adminSporadicMenu').addEventListener('change', async (e) => {
         if (!currentUserProfile || currentUserProfile.role !== 'admin') return;
         const key = e.target.dataset.sporadicKey;
@@ -2041,21 +4036,45 @@
 
       daysContainer.addEventListener('click', async (e) => {
         if (!userCanEdit()) return;
-        const btn = e.target.closest('button[data-action="step"]');
-        if (!btn) return;
-        const dayObj = getTargetDayObject(btn);
-        if (!dayObj) return;
-        const delta = Number(btn.dataset.delta);
-        const currentVal = Number(dayObj.visitors) || 0;
-        const nextVal = Math.max(0, currentVal + delta);
 
-        dayObj.visitors = nextVal;
-        if (nextVal > 0 && !dayObj.done) {
-          dayObj.done = true;
+        // Botões +1, -1, +10
+        const stepBtn = e.target.closest('button[data-action="step"]');
+        if (stepBtn) {
+          const dayObj = getTargetDayObject(stepBtn);
+          if (!dayObj) return;
+          const delta = Number(stepBtn.dataset.delta);
+          const currentVal = Number(dayObj.visitors) || 0;
+          const nextVal = Math.max(0, currentVal + delta);
+
+          dayObj.visitors = nextVal;
+          if (nextVal > 0 && !dayObj.done) {
+            dayObj.done = true;
+          }
+          await persistCurrentWeek(true);
+          renderDays();
+          updateSummaryAndPreview();
+          return;
         }
-        await persistCurrentWeek(true);
-        renderDays();
-        updateSummaryAndPreview();
+
+        // Chips rápidos de ocorrência
+        const tagBtn = e.target.closest('button[data-action="quick-tag"]');
+        if (tagBtn) {
+          const dayObj = getTargetDayObject(tagBtn);
+          if (!dayObj) return;
+          const tag = tagBtn.dataset.tag;
+          const currentObs = (dayObj.obs || '').trim();
+
+          if (currentObs.includes(tag)) {
+            const parts = currentObs.split(' • ').filter(p => p !== tag);
+            dayObj.obs = parts.join(' • ');
+          } else {
+            dayObj.obs = currentObs ? `${currentObs} • ${tag}` : tag;
+          }
+
+          await persistCurrentWeek(true);
+          renderDays();
+          updateSummaryAndPreview();
+        }
       });
 
       daysContainer.addEventListener('change', async (e) => {
@@ -2071,6 +4090,7 @@
         }
       });
 
+      // Debounce de 600ms para evitar que o Android feche o teclado a cada caractere
       let typingSaveTimer = null;
 
       daysContainer.addEventListener('input', (e) => {
@@ -2108,6 +4128,15 @@
         currentState.reportSent = e.target.checked;
         await persistCurrentWeek(true);
         updateSummaryAndPreview();
+
+        if (localStorage.getItem(STORAGE_KEY_SUNDAY_REMINDER) === '1') {
+          if (e.target.checked) {
+            await cancelSundayClosingReminder();
+          } else {
+            await scheduleSundayClosingReminder();
+          }
+        }
+
         if (e.target.checked) {
           showToast('Relatório marcado como enviado!');
         }
@@ -2117,6 +4146,10 @@
       document.getElementById('btnSaveToHistory').addEventListener('click', saveCurrentWeekToHistory);
       document.getElementById('btnSaveCurrentFromHistory').addEventListener('click', saveCurrentWeekToHistory);
       document.getElementById('btnMonthlyReport').addEventListener('click', generateMonthlyReport);
+
+      document.getElementById('dashYearSelect')?.addEventListener('change', renderAnnualDashboard);
+      document.getElementById('btnExportExcel')?.addEventListener('click', exportOfficialExcel);
+      document.getElementById('btnExportPdf')?.addEventListener('click', exportOfficialPdf);
 
       const btnLastSunday = document.getElementById('btnLastSundayMonthlyReport');
       if (btnLastSunday) {
@@ -2207,6 +4240,43 @@
 
       tabHistory.addEventListener('click', () => switchMainTab('history'));
       tabTeam.addEventListener('click', () => switchMainTab('team'));
+
+      document.getElementById('btnSync2026HistoryToFirebase')?.addEventListener('click', async () => {
+        if (!currentUserProfile || currentUserProfile.role !== 'admin') return;
+        const btn = document.getElementById('btnSync2026HistoryToFirebase');
+        btn.disabled = true;
+        btn.textContent = 'Sincronizando 37 semanas...';
+        try {
+          const mergedMap = new Map();
+          INITIAL_HISTORY.forEach(w => mergedMap.set(w.thursdayDate, w));
+          (historyState || []).forEach(w => {
+            if (w && w.thursdayDate && !mergedMap.has(w.thursdayDate)) {
+              mergedMap.set(w.thursdayDate, w);
+            }
+          });
+          historyState = Array.from(mergedMap.values()).sort((a, b) => b.thursdayDate.localeCompare(a.thursdayDate));
+          await persistHistoryList();
+
+          if (currentState.thursdayDate === '2026-11-19') {
+            const curSum = (currentState.days || []).reduce((acc, d) => acc + (Number(d.visitors) || 0), 0);
+            if (curSum === 0) {
+              currentState = createDefaultCurrentState('2026-11-19');
+              await persistCurrentWeek(true);
+            }
+          }
+
+          renderDays();
+          renderHistory();
+          updateSummaryAndPreview();
+          showToast('Histórico completo de 2026 (9.863 visitantes) gravado no Firebase!');
+        } catch (err) {
+          console.error('Erro ao gravar histórico 2026:', err);
+          showToast('Erro ao sincronizar histórico com o Firebase.');
+        } finally {
+          btn.disabled = false;
+          btn.textContent = 'Gravar Histórico 2026 no Firebase';
+        }
+      });
 
       document.getElementById('historyListContainer').addEventListener('click', async (e) => {
         if (!userCanEdit()) return;
