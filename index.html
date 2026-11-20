@@ -395,10 +395,11 @@
               Mensagem para WhatsApp da Diretoria
             </h2>
           </div>
-          <button id="btnSaveToHistory" type="button"
-            class="text-xs font-semibold px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 active:scale-95 text-amber-300 border border-slate-700 transition disabled:opacity-40 disabled:pointer-events-none">
-            Salvar no Histórico
-          </button>
+          <span id="autoHistoryBadge"
+            class="text-[11px] font-semibold px-2.5 py-1 rounded-lg bg-emerald-500/10 text-emerald-300 border border-emerald-500/25 flex items-center gap-1.5 shrink-0">
+            <span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
+            Histórico Automático
+          </span>
         </div>
 
         <!-- Banner automático no último domingo de cada mês -->
@@ -542,10 +543,7 @@
             </svg>
             <span>Relatório WhatsApp do Mês</span>
           </button>
-          <button id="btnSaveCurrentFromHistory" type="button"
-            class="px-3.5 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 active:scale-95 text-slate-950 font-bold text-xs transition disabled:opacity-40 disabled:pointer-events-none">
-            + Arquivar Semana Atual
-          </button>
+
         </div>
       </div>
 
@@ -634,19 +632,15 @@
         <div>
           <h3 class="text-base font-bold text-white">Avançar para a Próxima Semana?</h3>
           <p class="text-xs sm:text-sm text-slate-400 mt-1">
-            Isso avançará a data em <strong class="text-slate-200">+7 dias</strong>, zerará os campos e desativará dias esporádicos para a nova semana.
+            A semana atual já fica salva automaticamente no histórico. Ao avançar <strong class="text-slate-200">+7 dias</strong>, a próxima semana será carregada (ou iniciada zerada caso ainda não tenha registros).
           </p>
         </div>
       </div>
 
       <div class="flex flex-col gap-2 pt-2">
-        <button id="btnConfirmSaveAndNext" type="button"
-          class="w-full py-3 px-4 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-semibold text-sm transition">
-          Salvar semana atual no histórico e avançar
-        </button>
         <button id="btnConfirmOnlyNext" type="button"
-          class="w-full py-3 px-4 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 font-semibold text-sm border border-slate-700 transition">
-          Apenas avançar sem salvar
+          class="w-full py-3 px-4 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-semibold text-sm transition">
+          Avançar para a Próxima Semana (+7 dias)
         </button>
         <button id="btnCancelNextModal" type="button"
           class="w-full py-2.5 px-4 rounded-xl text-slate-400 hover:text-white text-xs font-medium transition">
@@ -2462,6 +2456,49 @@
       localStorage.setItem(STORAGE_KEY_USERS, JSON.stringify(teamUsers));
     }
 
+    function syncCurrentWeekIntoHistoryMemory() {
+      const entries = getOrderedWeekEntries();
+      const period = getActivePeriodString();
+      const total = entries.reduce((sum, d) => sum + (Number(d.visitors) || 0), 0);
+      const existingIndex = historyState.findIndex(item => item.thursdayDate === currentState.thursdayDate);
+
+      // Só cria/atualiza no histórico se a semana já existir nele ou tiver algum dado preenchido
+      const hasAnyData = total > 0 || Boolean(currentState.reportSent) || entries.some(d => d.done || (d.obs && d.obs.trim().length > 0));
+      if (existingIndex === -1 && !hasAnyData) {
+        return false;
+      }
+
+      const prevId = existingIndex >= 0 ? historyState[existingIndex].id : `hist_${currentState.thursdayDate.replace(/-/g, '_')}`;
+      const entry = {
+        id: prevId,
+        thursdayDate: currentState.thursdayDate,
+        periodLabel: period,
+        total,
+        reportSent: Boolean(currentState.reportSent),
+        savedAt: currentState.lastUpdatedAt
+          ? `${currentState.lastUpdatedAt} (${currentState.lastUpdatedBy || currentUserProfile?.name || 'Equipe'})`
+          : `${formatDDMMYYYY(new Date())} (${currentUserProfile?.name || 'Equipe'})`,
+        days: entries.map((d) => ({
+          dayName: d.dayName,
+          dateShort: formatDDMM(d.dateObj),
+          visitors: Number(d.visitors) || 0,
+          obs: (d.obs || '').trim(),
+          done: Boolean(d.done),
+          isSporadic: d.type === 'sporadic'
+        }))
+      };
+
+      if (existingIndex >= 0) {
+        historyState[existingIndex] = entry;
+      } else {
+        historyState.unshift(entry);
+        historyState.sort((a, b) => (b.thursdayDate || '').localeCompare(a.thursdayDate || ''));
+      }
+
+      localStorage.setItem(STORAGE_KEY_HISTORY, JSON.stringify(historyState));
+      return true;
+    }
+
     async function persistCurrentWeek(touchAudit = true) {
       if (touchAudit && currentUserProfile) {
         currentState.lastUpdatedBy = currentUserProfile.name;
@@ -2471,6 +2508,9 @@
       // Sempre salva cópia espelho local imediata para segurança offline
       localStorage.setItem(STORAGE_KEY_CURRENT, JSON.stringify(currentState));
 
+      // Sincroniza automaticamente a semana no histórico sempre que houver alteração
+      const historyUpdated = touchAudit ? syncCurrentWeekIntoHistoryMemory() : false;
+
       if (isFirebaseConfigured && fbDb) {
         if (!navigator.onLine || !isFirebaseConnected) {
           setOfflinePendingFlag(true);
@@ -2478,6 +2518,9 @@
         }
         try {
           await set(ref(fbDb, 'memorial/currentWeek'), currentState);
+          if (historyUpdated) {
+            await set(ref(fbDb, 'memorial/history'), historyState);
+          }
           setOfflinePendingFlag(false);
         } catch (err) {
           setOfflinePendingFlag(true);
@@ -2694,8 +2737,7 @@
 
       document.getElementById('thursdayDateInput').disabled = !editable;
       document.getElementById('btnNextWeek').disabled = !editable;
-      document.getElementById('btnSaveToHistory').disabled = !editable;
-      document.getElementById('btnSaveCurrentFromHistory').disabled = !editable;
+
       document.getElementById('chkReportSent').disabled = !editable;
 
       const sporadicMenu = document.getElementById('adminSporadicMenu');
@@ -4000,10 +4042,24 @@
         if (!e.target.value || !userCanEdit()) return;
         const pickedDate = parseLocalDate(e.target.value);
         const correspondingThursday = getThursdayOfWeek(pickedDate);
+        const targetThuISO = formatISO(correspondingThursday);
 
-        currentState.thursdayDate = formatISO(correspondingThursday);
-
+        // Salva o estado da semana anterior antes de trocar de data
         await persistCurrentWeek(true);
+
+        // Busca se já existe histórico para a semana selecionada no calendário
+        const foundInHistory = historyState.find(item => item.thursdayDate === targetThuISO);
+        if (foundInHistory) {
+          currentState = restoreStateFromHistoryItem(foundInHistory);
+          await persistCurrentWeek(false);
+          showToast(`Histórico carregado: semana ${foundInHistory.periodLabel}`);
+        } else {
+          currentState = createDefaultCurrentState(targetThuISO);
+          await persistCurrentWeek(false);
+          showToast(`Nova semana selecionada: ${getActivePeriodString()}`);
+        }
+
+        applyPermissionsUI();
         renderDays();
         updateSummaryAndPreview();
       });
@@ -4102,9 +4158,11 @@
         if (target.dataset.action === 'input-visitors') {
           const val = Math.max(0, parseInt(target.value, 10) || 0);
           dayObj.visitors = val;
+          syncCurrentWeekIntoHistoryMemory();
           updateSummaryAndPreview();
         } else if (target.dataset.action === 'input-obs') {
           dayObj.obs = target.value;
+          syncCurrentWeekIntoHistoryMemory();
           updateSummaryAndPreview();
         }
 
@@ -4143,8 +4201,6 @@
       });
 
       document.getElementById('btnCopyMessage').addEventListener('click', copyWhatsAppMessage);
-      document.getElementById('btnSaveToHistory').addEventListener('click', saveCurrentWeekToHistory);
-      document.getElementById('btnSaveCurrentFromHistory').addEventListener('click', saveCurrentWeekToHistory);
       document.getElementById('btnMonthlyReport').addEventListener('click', generateMonthlyReport);
 
       document.getElementById('dashYearSelect')?.addEventListener('change', renderAnnualDashboard);
@@ -4166,21 +4222,25 @@
       });
 
       async function advanceSevenDays() {
-        const currentThu = parseLocalDate(currentState.thursdayDate);
-        const nextThu = addDays(currentThu, 7);
-        currentState = createDefaultCurrentState(formatISO(nextThu));
         await persistCurrentWeek(true);
+        const currentThu = parseLocalDate(currentState.thursdayDate);
+        const nextThuISO = formatISO(addDays(currentThu, 7));
+        const foundNext = historyState.find(item => item.thursdayDate === nextThuISO);
+
+        if (foundNext) {
+          currentState = restoreStateFromHistoryItem(foundNext);
+        } else {
+          currentState = createDefaultCurrentState(nextThuISO);
+        }
+
+        await persistCurrentWeek(false);
         applyPermissionsUI();
         renderDays();
         updateSummaryAndPreview();
         nextWeekModal.classList.add('hidden');
-        showToast(`Nova semana iniciada: ${getActivePeriodString()}`);
+        showToast(`Semana carregada: ${getActivePeriodString()}`);
       }
 
-      document.getElementById('btnConfirmSaveAndNext').addEventListener('click', async () => {
-        await saveCurrentWeekToHistory();
-        await advanceSevenDays();
-      });
       document.getElementById('btnConfirmOnlyNext').addEventListener('click', advanceSevenDays);
 
       const tabCurrent = document.getElementById('tabCurrent');
